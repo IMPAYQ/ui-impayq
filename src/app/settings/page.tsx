@@ -11,7 +11,7 @@ export default function SettingsPage() {
           <div className="card-content">
             <div className="flex items-center gap-4">
               <div className="avatar">
-                <Image src="/placeholder.svg?height=64&width=64" alt="User" />
+                <Image src="/placeholder.svg?height=64&width=64" height={64} width={64} alt="User" />
               </div>
               <div>
                 <h3 className="font-medium text-gray-800">John Doe</h3>
