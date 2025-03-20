@@ -1,7 +1,9 @@
+/* eslint-disable react/no-unescaped-entities */
 "use client"
 
 import { useState } from "react"
 import { Wallet, Share2 } from "lucide-react"
+import Image from "next/image"
 import QRCode from "../app/components/Qrcode"
 
 export default function Home() {
@@ -69,7 +71,7 @@ export default function Home() {
         <div className="space-y-3">
           <div className="activity-item">
             <div className="activity-icon">
-              <img
+              <Image
                 src="/placeholder.svg?height=32&width=32"
                 width={32}
                 height={32}
@@ -87,7 +89,7 @@ export default function Home() {
           </div>
           <div className="activity-item">
             <div className="activity-icon">
-              <img
+              <Image
                 src="/placeholder.svg?height=32&width=32"
                 width={32}
                 height={32}

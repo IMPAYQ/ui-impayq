@@ -1,4 +1,5 @@
 import { Bell, ChevronRight, Copy, HelpCircle, Lock, LogOut, Shield } from "lucide-react"
+import Image from "next/image"
 
 export default function SettingsPage() {
   return (
@@ -10,7 +11,7 @@ export default function SettingsPage() {
           <div className="card-content">
             <div className="flex items-center gap-4">
               <div className="avatar">
-                <img src="/placeholder.svg?height=64&width=64" alt="User" />
+                <Image src="/placeholder.svg?height=64&width=64" alt="User" />
               </div>
               <div>
                 <h3 className="font-medium text-gray-800">John Doe</h3>

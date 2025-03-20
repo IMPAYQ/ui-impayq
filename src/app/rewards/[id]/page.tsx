@@ -1,5 +1,6 @@
 import { ArrowLeft, Coffee, Gift, Star } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 
 // Mock data for a specific merchant's rewards
 const merchantData = {
@@ -34,7 +35,7 @@ const merchantData = {
   ],
 }
 
-export default function MerchantRewardsPage({ params }: { params: { id: string } }) {
+export default function MerchantRewardsPage() {
   // In a real app, we would fetch the merchant data based on the ID
   // For this demo, we'll just use the mock data
 
@@ -76,7 +77,7 @@ export default function MerchantRewardsPage({ params }: { params: { id: string }
               <div className="card-content p-0">
                 <div className="flex p-4">
                   <div className="icon-bg-blue p-2 rounded-xl mr-3">
-                    <img
+                    <Image
                       src={reward.image || "/placeholder.svg"}
                       alt={reward.name}
                       className="w-12 h-12 object-contain"
