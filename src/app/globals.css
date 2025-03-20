@@ -101,3 +101,67 @@
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
+
+
+
+  /* Reset */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans",
+      "Helvetica Neue", sans-serif;
+    background-color: var(--color-background);
+    color: var(--color-gray-800);
+    line-height: 1.5;
+  }
+  
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+  
+  button {
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  /* Layout */
+  .app-container {
+    max-width: 28rem;
+    margin: 0 auto;
+    overflow: hidden;
+    border-radius: var(--radius-3xl);
+    box-shadow: var(--shadow-xl);
+    background-color: var(--color-white);
+    border: 8px solid var(--color-white);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  
+  .page-container {
+    flex: 1;
+    overflow: auto;
+    padding: var(--space-5);
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 4rem);
+    padding-bottom: 5rem;
+  }
+  
+  .page-purple {
+    background: linear-gradient(to bottom, var(--color-purple-100), var(--color-purple-50));
+  }
+  
+  .page-blue {
+    background: linear-gradient(to bottom, var(--color-blue-100), var(--color-blue-50));
+  }
+  
+  .page-green {
+    background: linear-gradient(to bottom, var(--color-green-100), var(--color-green-50));
+  }
