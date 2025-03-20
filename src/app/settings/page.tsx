@@ -1,7 +1,34 @@
+"use client"
+
 import { Bell, ChevronRight, Copy, HelpCircle, Lock, LogOut, Shield } from "lucide-react"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 
 export default function SettingsPage() {
+  const router = useRouter()
+  const [walletAddress, setWalletAddress] = useState<string>("")
+
+  // Get wallet address from localStorage on component mount
+  useEffect(() => {
+    const storedAddress = localStorage.getItem("walletAddress")
+    if (storedAddress) {
+      setWalletAddress(storedAddress)
+    }
+  }, [])
+
+  // Format wallet address for display
+  const formattedAddress = walletAddress
+    ? `${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}`
+    : "0x1a2...9i0j"
+
+  // Handle logout
+  const handleLogout = () => {
+    localStorage.removeItem("walletConnected")
+    localStorage.removeItem("walletAddress")
+    router.push("/")
+  }
+
   return (
     <div className="page-container page-purple">
       <h1 className="page-title mb-6">Profile</h1>
@@ -33,8 +60,15 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between mb-4">
                 <div className="text-sm font-medium text-gray-700">Wallet Address</div>
                 <div className="flex items-center">
-                  <code className="code mr-2">0x1a2...9i0j</code>
-                  <button className="btn btn-outline btn-icon rounded-full">
+                  <code className="code mr-2">{formattedAddress}</code>
+                  <button
+                    className="btn btn-outline btn-icon rounded-full"
+                    onClick={() => {
+                      if (navigator.clipboard) {
+                        navigator.clipboard.writeText(walletAddress)
+                      }
+                    }}
+                  >
                     <Copy size={16} className="text-gray-500" />
                   </button>
                 </div>
@@ -115,7 +149,11 @@ export default function SettingsPage() {
             Help & Support
           </button>
 
-          <button className="btn btn-primary rounded-full py-3" style={{ backgroundColor: "var(--color-red-500)" }}>
+          <button
+            onClick={handleLogout}
+            className="btn btn-primary rounded-full py-3"
+            style={{ backgroundColor: "var(--color-red-500)" }}
+          >
             <LogOut size={20} className="mr-2" />
             Sign Out
           </button>

@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@privy-io/react-auth": "^2.6.4",
     "lucide-react": "^0.483.0",
     "next": "15.2.3",
     "qr-code-styling": "^1.9.1",

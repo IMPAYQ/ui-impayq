@@ -1,5 +1,9 @@
+"use client"
+
 import { Gift, ShoppingBag, Coffee, Utensils, Ticket, ChevronRight } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 
 // Mock data for rewards
 const rewards = [
@@ -38,6 +42,25 @@ const rewards = [
 ]
 
 export default function RewardsPage() {
+  const router = useRouter()
+  const [isConnected, setIsConnected] = useState(false)
+
+  // Check wallet connection status
+  useEffect(() => {
+    const connected = localStorage.getItem("walletConnected") === "true"
+    setIsConnected(connected)
+
+    // Redirect to home if not connected
+    if (!connected) {
+      router.push("/")
+    }
+  }, [router])
+
+  // Don't render content if not connected
+  if (!isConnected) {
+    return null
+  }
+
   return (
     <div className="page-container page-blue">
       <div className="page-header">

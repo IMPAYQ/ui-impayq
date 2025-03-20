@@ -1,21 +1,128 @@
 /* eslint-disable react/no-unescaped-entities */
 "use client"
 
-import { useState } from "react"
-import { Wallet, Share2 } from "lucide-react"
+import { Shield, Zap, Wallet, Share2 } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 import Image from "next/image"
-import QRCode from "../app/components/Qrcode"
+import QRCode from "./components/Qrcode"
 
 export default function Home() {
+  const router = useRouter()
+  const [isConnected, setIsConnected] = useState(false)
+  const [walletAddress, setWalletAddress] = useState("")
   const [paymentAmount, setPaymentAmount] = useState("")
   const [showPayment, setShowPayment] = useState(false)
+  const [loading, setLoading] = useState(true)
 
-  // This would be the user's wallet address in a real implementation
-  const userAddress = "0x1a2b3c4d5e6f7g8h9i0j"
+  // Function to handle wallet connection
+  const handleConnect = () => {
+    console.log("Connecting wallet...")
+    const newAddress = "0x" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
 
-  // In a real implementation, this would generate a QR code with payment info
-  const qrValue = showPayment && paymentAmount ? `${userAddress}?amount=${paymentAmount}` : userAddress
+    // Store connection state in localStorage
+    localStorage.setItem("walletConnected", "true")
+    localStorage.setItem("walletAddress", newAddress)
 
+    // Force a reload to ensure all components pick up the new connection state
+    window.location.reload()
+  }
+
+  // Check if already connected
+  useEffect(() => {
+    const connected = localStorage.getItem("walletConnected") === "true"
+    const address = localStorage.getItem("walletAddress") || ""
+
+    setIsConnected(connected)
+    setWalletAddress(address)
+    setLoading(false)
+  }, [])
+
+  // QR code value
+  const qrValue = showPayment && paymentAmount ? `${walletAddress}?amount=${paymentAmount}` : walletAddress
+
+  // If still loading, show nothing to prevent flash
+  if (loading) {
+    return null
+  }
+
+  // Show login screen if not connected
+  if (!isConnected) {
+    return (
+      <div className="page-container page-purple flex flex-col items-center justify-center p-8">
+        <div className="text-center mb-12">
+          <h1 className="text-3xl font-bold mb-2">ImPayQ</h1>
+          <p className="text-gray-600 mb-8">Blockchain-powered loyalty rewards</p>
+        </div>
+
+        <div className="card w-full mb-8">
+          <div className="card-content text-center">
+            <div className="icon-bg-purple p-4 rounded-full mx-auto mb-4">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M12 8V12L14 14"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+            <h2 className="text-xl font-semibold mb-2">Connect Your Wallet</h2>
+            <p className="text-gray-500 mb-6">Connect your wallet to access rewards and payments</p>
+
+            {/* Simplified button with inline styles for better visibility */}
+            <button
+              onClick={handleConnect}
+              style={{
+                backgroundColor: "#fb923c",
+                color: "white",
+                padding: "16px",
+                borderRadius: "9999px",
+                width: "100%",
+                fontWeight: "500",
+                cursor: "pointer",
+                border: "none",
+              }}
+            >
+              Connect Wallet
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 w-full">
+          <div className="card">
+            <div className="card-content text-center">
+              <div className="icon-bg-blue p-3 rounded-full mx-auto mb-3">
+                <Shield size={24} />
+              </div>
+              <h3 className="font-medium mb-1">Secure</h3>
+              <p className="text-xs text-gray-500">Blockchain-powered security</p>
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="card-content text-center">
+              <div className="icon-bg-green p-3 rounded-full mx-auto mb-3">
+                <Zap size={24} />
+              </div>
+              <h3 className="font-medium mb-1">Rewards</h3>
+              <p className="text-xs text-gray-500">Earn at every purchase</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Show home dashboard for connected users
   return (
     <div className="page-container page-purple">
       <div className="page-header">
@@ -29,7 +136,6 @@ export default function Home() {
       </div>
 
       <div className="qr-container">
-        <div className="qr-blur"></div>
         <div className="qr-card">
           <div className="qr-gradient"></div>
           <div className="qr-content">

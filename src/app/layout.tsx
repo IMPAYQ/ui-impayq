@@ -1,6 +1,7 @@
 import type React from "react"
 import "./globals.css"
 import ClientLayout from "./ClientLayout"
+import { Providers } from "./providers"
 
 
 export default function RootLayout({
@@ -8,6 +9,10 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  return <ClientLayout>{children}</ClientLayout>
+  return (
+    <Providers>
+      <ClientLayout>{children}</ClientLayout>
+    </Providers>
+  )
 }
 
