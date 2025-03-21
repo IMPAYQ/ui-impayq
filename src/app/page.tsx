@@ -2,23 +2,28 @@
 "use client"
 
 import { Shield, Zap, Wallet, Share2 } from "lucide-react"
-import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import Image from "next/image"
 import QRCode from "./components/Qrcode"
+import { useLogin, useWallets, usePrivy } from "@privy-io/react-auth"
 
 export default function Home() {
-  const router = useRouter()
   const [isConnected, setIsConnected] = useState(false)
   const [walletAddress, setWalletAddress] = useState("")
   const [paymentAmount, setPaymentAmount] = useState("")
   const [showPayment, setShowPayment] = useState(false)
   const [loading, setLoading] = useState(true)
 
+  const { ready, authenticated } = usePrivy()
+  const { wallets } = useWallets();
+  const { login } = useLogin()
+  // Disable login when Privy is not ready or the user is already authenticated
+  const disableLogin = !ready || (ready && authenticated)
+
   // Function to handle wallet connection
   const handleConnect = () => {
     console.log("Connecting wallet...")
-    const newAddress = "0x" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+    const newAddress = wallets[0].address
 
     // Store connection state in localStorage
     localStorage.setItem("walletConnected", "true")
@@ -28,7 +33,7 @@ export default function Home() {
     window.location.reload()
   }
 
-  // Check if already connected
+  // Check if already connected on mount
   useEffect(() => {
     const connected = localStorage.getItem("walletConnected") === "true"
     const address = localStorage.getItem("walletAddress") || ""
@@ -37,6 +42,15 @@ export default function Home() {
     setWalletAddress(address)
     setLoading(false)
   }, [])
+
+  // *Here's the new effect*:
+  // If user is authenticated via Privy but not yet connected, auto‐trigger handleConnect()
+  useEffect(() => {
+    if (authenticated && !isConnected) {
+      handleConnect()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authenticated, isConnected])
 
   // QR code value
   const qrValue = showPayment && paymentAmount ? `${walletAddress}?amount=${paymentAmount}` : walletAddress
@@ -58,7 +72,13 @@ export default function Home() {
         <div className="card w-full mb-8">
           <div className="card-content text-center">
             <div className="icon-bg-purple p-4 rounded-full mx-auto mb-4">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <svg
+                width="32"
+                height="32"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
                 <path
                   d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
                   stroke="currentColor"
@@ -78,9 +98,15 @@ export default function Home() {
             <h2 className="text-xl font-semibold mb-2">Connect Your Wallet</h2>
             <p className="text-gray-500 mb-6">Connect your wallet to access rewards and payments</p>
 
-            {/* Simplified button with inline styles for better visibility */}
             <button
-              onClick={handleConnect}
+              disabled={disableLogin}
+              onClick={() =>
+                login({
+                  loginMethods: ["wallet"],
+                  walletChainType: "ethereum-only",
+                  disableSignup: false,
+                })
+              }
               style={{
                 backgroundColor: "#fb923c",
                 color: "white",
@@ -216,4 +242,3 @@ export default function Home() {
     </div>
   )
 }
-
