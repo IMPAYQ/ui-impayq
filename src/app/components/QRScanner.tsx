@@ -16,6 +16,13 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
   const [scanningStage, setScanningStage] = useState<"searching" | "detecting" | "confirmed">("searching")
   const [qrVisible, setQrVisible] = useState(false)
 
+  // Once scanningStage changes to "confirmed", automatically close the scanner
+  useEffect(() => {
+    if (scanningStage === "confirmed" && "Successfully scanned! Processing...") {
+      onClose()
+    }
+  }, [scanningStage, onClose])
+
   // Simulate the QR code detection process
   useEffect(() => {
     if (!scannerActive) return
