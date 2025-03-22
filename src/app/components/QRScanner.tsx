@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { ArrowLeft, Check, X, Loader2 } from "lucide-react"
+import jsQR from "jsqr"
 
 interface QRScannerProps {
   onScan: (data: string) => void
@@ -10,61 +11,19 @@ interface QRScannerProps {
 
 export default function QRScanner({ onScan, onClose }: QRScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+
   const [hasPermission, setHasPermission] = useState<boolean | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [scannerActive, setScannerActive] = useState(true)
   const [scanningStage, setScanningStage] = useState<"searching" | "detecting" | "confirmed">("searching")
-  const [qrVisible, setQrVisible] = useState(false)
 
-  // Once scanningStage changes to "confirmed", automatically close the scanner
   useEffect(() => {
     if (scanningStage === "confirmed" && "Successfully scanned! Processing...") {
       onClose()
     }
   }, [scanningStage, onClose])
 
-  // Simulate the QR code detection process
-  useEffect(() => {
-    if (!scannerActive) return
-
-    // First show the QR code after a delay
-    const showQrTimer = setTimeout(() => {
-      setQrVisible(true)
-
-      // Then start "detecting" it
-      const detectingTimer = setTimeout(() => {
-        setScanningStage("detecting")
-
-        // Finally confirm the scan
-        const confirmTimer = setTimeout(() => {
-          setScanningStage("confirmed")
-
-          // Process the scanned data
-          const finalTimer = setTimeout(() => {
-            const mockQrData = JSON.stringify({
-              walletAddress: "0x1a2b3c4d5e6f7g8h9i0j",
-              amount: "25.50",
-              username: "John Doe",
-              timestamp: new Date().toISOString(),
-            })
-
-            setScannerActive(false)
-            onScan(mockQrData)
-          }, 800)
-
-          return () => clearTimeout(finalTimer)
-        }, 1500)
-
-        return () => clearTimeout(confirmTimer)
-      }, 2000)
-
-      return () => clearTimeout(detectingTimer)
-    }, 2000)
-
-    return () => clearTimeout(showQrTimer)
-  }, [scannerActive, onScan, qrVisible])
-
-  // Initialize camera
+  // 1. Access the camera
   useEffect(() => {
     const startCamera = async () => {
       setIsLoading(true)
@@ -76,9 +35,7 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
             height: { ideal: 720 },
           },
         }
-
         const stream = await navigator.mediaDevices.getUserMedia(constraints)
-
         if (videoRef.current) {
           videoRef.current.srcObject = stream
           setHasPermission(true)
@@ -93,7 +50,7 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
 
     startCamera()
 
-    // Cleanup function to stop camera when component unmounts
+    // Cleanup: stop the camera when component unmounts
     return () => {
       if (videoRef.current && videoRef.current.srcObject) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -103,6 +60,64 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
     }
   }, [])
 
+  // 2. Once the video is playing, start scanning frames using jsQR
+  useEffect(() => {
+    if (!videoRef.current || !canvasRef.current) return
+
+    let isMounted = true // To stop scanning when component unmounts
+
+    const video = videoRef.current
+    const canvas = canvasRef.current
+    const context = canvas.getContext("2d")
+
+    // We'll update scanningStage from "searching" to "detecting"
+    // once we start seeing frames.
+    function scanFrame() {
+      if (!isMounted || !video || !context) return
+
+      // If video isn't ready, schedule another attempt
+      if (video.readyState !== video.HAVE_ENOUGH_DATA) {
+        requestAnimationFrame(scanFrame)
+        return
+      }
+
+      // If video is playing, draw it on canvas & try to decode
+      canvas.width = video.videoWidth
+      canvas.height = video.videoHeight
+      context.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+      // Read the imageData from the canvas
+      const imageData = context.getImageData(0, 0, canvas.width, canvas.height)
+
+      // Switch to "detecting" if not confirmed yet
+      if (scanningStage === "searching") {
+        setScanningStage("detecting")
+      }
+
+      const code = jsQR(imageData.data, imageData.width, imageData.height, {
+        inversionAttempts: "dontInvert",
+      })
+
+      if (code && code.data) {
+        // 3. If we found a QR code, we confirm & pass data out
+        setScanningStage("confirmed")
+        onScan(code.data)
+        // Optionally: close the scanner automatically
+        // onClose()
+      } else {
+        // No QR code found; keep scanning
+        requestAnimationFrame(scanFrame)
+      }
+    }
+
+    requestAnimationFrame(scanFrame)
+
+    return () => {
+      isMounted = false
+    }
+  }, [onScan, scanningStage])
+
+  // 4. Loading or camera permission check
   if (isLoading) {
     return (
       <div
@@ -135,6 +150,7 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
     )
   }
 
+  // 5. Render the camera preview + scanning overlay
   return (
     <div
       className="fixed inset-0 z-50 flex flex-col"
@@ -143,14 +159,31 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
       <div className="bg-black bg-opacity-90 w-full h-full flex flex-col">
         <div className="relative flex-1">
           {/* Camera feed */}
-          <video ref={videoRef} autoPlay playsInline muted className="absolute inset-0 w-full h-full object-cover" />
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            className="absolute inset-0 w-full h-full object-cover"
+            // This helps the video load before scanning
+            onLoadedMetadata={() => {
+              if (scanningStage === "searching") {
+                setScanningStage("detecting")
+              }
+            }}
+          />
+
+          {/* A hidden canvas to capture frames */}
+          <canvas ref={canvasRef} className="hidden" />
 
           {/* Scanning overlay */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             {/* Scanner frame */}
             <div className="relative w-64 h-64 mb-8">
               <div
-                className={`absolute inset-0 border-2 ${scanningStage === "confirmed" ? "border-green-500" : scanningStage === "detecting" ? "border-yellow-500" : "border-white"} rounded-lg`}
+                className={`absolute inset-0 border-2 ${
+                  scanningStage === "confirmed" ? "border-green-500" : scanningStage === "detecting" ? "border-yellow-500" : "border-white"
+                } rounded-lg`}
               ></div>
 
               {/* Scanning animation */}
@@ -160,66 +193,41 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
 
               {/* Corner markers */}
               <div
-                className={`absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 ${scanningStage === "confirmed" ? "border-green-500" : scanningStage === "detecting" ? "border-yellow-500" : "border-purple-500"}`}
+                className={`absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 ${
+                  scanningStage === "confirmed"
+                    ? "border-green-500"
+                    : scanningStage === "detecting"
+                    ? "border-yellow-500"
+                    : "border-purple-500"
+                }`}
               ></div>
               <div
-                className={`absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 ${scanningStage === "confirmed" ? "border-green-500" : scanningStage === "detecting" ? "border-yellow-500" : "border-purple-500"}`}
+                className={`absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 ${
+                  scanningStage === "confirmed"
+                    ? "border-green-500"
+                    : scanningStage === "detecting"
+                    ? "border-yellow-500"
+                    : "border-purple-500"
+                }`}
               ></div>
               <div
-                className={`absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 ${scanningStage === "confirmed" ? "border-green-500" : scanningStage === "detecting" ? "border-yellow-500" : "border-purple-500"}`}
+                className={`absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 ${
+                  scanningStage === "confirmed"
+                    ? "border-green-500"
+                    : scanningStage === "detecting"
+                    ? "border-yellow-500"
+                    : "border-purple-500"
+                }`}
               ></div>
               <div
-                className={`absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 ${scanningStage === "confirmed" ? "border-green-500" : scanningStage === "detecting" ? "border-yellow-500" : "border-purple-500"}`}
+                className={`absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 ${
+                  scanningStage === "confirmed"
+                    ? "border-green-500"
+                    : scanningStage === "detecting"
+                    ? "border-yellow-500"
+                    : "border-purple-500"
+                }`}
               ></div>
-
-              {/* Simulated QR code */}
-              {qrVisible && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="bg-white p-2 rounded">
-                    <svg width="180" height="180" viewBox="0 0 200 200">
-                      <rect width="200" height="200" fill="white" />
-                      {/* Simulated QR code pattern */}
-                      <g fill="black">
-                        {/* Position detection patterns */}
-                        <rect x="20" y="20" width="40" height="40" />
-                        <rect x="25" y="25" width="30" height="30" fill="white" />
-                        <rect x="30" y="30" width="20" height="20" />
-
-                        <rect x="140" y="20" width="40" height="40" />
-                        <rect x="145" y="25" width="30" height="30" fill="white" />
-                        <rect x="150" y="30" width="20" height="20" />
-
-                        <rect x="20" y="140" width="40" height="40" />
-                        <rect x="25" y="145" width="30" height="30" fill="white" />
-                        <rect x="30" y="150" width="20" height="20" />
-
-                        {/* Data modules (simplified) */}
-                        <rect x="80" y="30" width="10" height="10" />
-                        <rect x="100" y="30" width="10" height="10" />
-                        <rect x="120" y="40" width="10" height="10" />
-                        <rect x="70" y="50" width="10" height="10" />
-                        <rect x="90" y="50" width="10" height="10" />
-                        <rect x="110" y="60" width="10" height="10" />
-                        <rect x="80" y="70" width="10" height="10" />
-                        <rect x="100" y="80" width="10" height="10" />
-                        <rect x="120" y="90" width="10" height="10" />
-                        <rect x="70" y="100" width="10" height="10" />
-                        <rect x="90" y="110" width="10" height="10" />
-                        <rect x="110" y="120" width="10" height="10" />
-                        <rect x="80" y="130" width="10" height="10" />
-                        <rect x="100" y="140" width="10" height="10" />
-                        <rect x="120" y="150" width="10" height="10" />
-                        <rect x="130" y="70" width="10" height="10" />
-                        <rect x="140" y="90" width="10" height="10" />
-                        <rect x="150" y="110" width="10" height="10" />
-                        <rect x="30" y="80" width="10" height="10" />
-                        <rect x="40" y="100" width="10" height="10" />
-                        <rect x="50" y="120" width="10" height="10" />
-                      </g>
-                    </svg>
-                  </div>
-                </div>
-              )}
 
               {/* Scanning status indicator */}
               {scanningStage === "detecting" && (
@@ -263,4 +271,3 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
     </div>
   )
 }
-

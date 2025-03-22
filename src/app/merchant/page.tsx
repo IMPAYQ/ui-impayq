@@ -1,7 +1,16 @@
 "use client"
 
 import { useState } from "react"
-import { Check, CreditCard, Gift, Plus, QrCode, Settings, Zap, ArrowRight } from "lucide-react"
+import {
+  Check,
+  CreditCard,
+  Gift,
+  Plus,
+  QrCode,
+  Settings,
+  Zap,
+  ArrowRight,
+} from "lucide-react"
 import QRScanner from "../components/QRScanner"
 import PaymentConfirmation from "../components/PaymentConfirmation"
 import PaymentSuccess from "../components/PaymentSuccess"
@@ -17,38 +26,60 @@ export default function MerchantPage() {
   const [scannedData, setScannedData] = useState<string | null>(null)
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
+
+  // Payment details
   const [paymentAmount, setPaymentAmount] = useState("")
   const [customerName, setCustomerName] = useState("")
+  const [customerAddress, setCustomerAddress] = useState("")
 
+  // Handle scanned QR data
   const handleScan = (data: string) => {
+    // We’ve received the raw QR data (e.g. "0xABC123...?amount=10")
+    console.log("Scanned data:", data)
     setScannedData(data)
     setShowConfirmation(true)
 
     try {
-      const parsedData = JSON.parse(data)
-      setPaymentAmount(parsedData.amount)
-      setCustomerName(parsedData.username)
+      // Example expected format: "0xYOURADDRESS?amount=XX.XX"
+      const [addressPart, queryString] = data.split("?")
+
+      // The part before '?' is the wallet address
+      setCustomerAddress(addressPart || "")
+
+      // Reset any old values
+      setPaymentAmount("")
+      setCustomerName("")
+
+      // If there's a query string (e.g., "amount=10"), parse it
+      if (queryString) {
+        const params = new URLSearchParams(queryString)
+        const scannedAmount = params.get("amount") || ""
+        // If your QR code also has `username`, you can parse that similarly:
+        // const scannedUsername = params.get("username") || ""
+
+        setPaymentAmount(scannedAmount)
+        // setCustomerName(scannedUsername)
+      }
     } catch (error) {
+      // If something unexpected happens, we’ll see the error here
       console.error("Error parsing QR data:", error)
     }
   }
 
+  // Called when user confirms payment in PaymentConfirmation modal
   const handleConfirmPayment = () => {
     setShowConfirmation(false)
     setShowSuccess(true)
   }
 
-  // Update the openScanner function to ensure the scanner is properly contained
-
+  // Open/Close scanner
   const openScanner = () => {
-    // Ensure the body doesn't scroll when scanner is open
     if (typeof document !== "undefined") {
       document.body.style.overflow = "hidden"
     }
     setShowScanner(true)
   }
 
-  // Update the handleCloseScanner function to restore scrolling
   const handleCloseScanner = () => {
     if (typeof document !== "undefined") {
       document.body.style.overflow = ""
@@ -56,37 +87,44 @@ export default function MerchantPage() {
     setShowScanner(false)
   }
 
+  // Close confirmation modal
   const handleCloseConfirmation = () => {
     setShowConfirmation(false)
     setScannedData(null)
   }
 
-  // Update the handleCloseSuccess function to properly return to the merchant page
+  // Close success modal and log the transaction
   const handleCloseSuccess = () => {
     setShowSuccess(false)
     setScannedData(null)
-    setActiveTab("scanner") // Keep on scanner tab after success
+    setActiveTab("scanner")
 
-    // Add a new transaction to the recent transactions list
+    // Example: "log" a transaction
     const newTransaction = {
       id: Date.now().toString(),
+      // If "customerName" is "Alice Doe", we might shorten it to "Alice"
       name: customerName.split(" ")[0] || "Customer",
+      address: customerAddress,
       amount: paymentAmount,
       points: Math.floor(Number.parseFloat(paymentAmount)),
-      time: new Date().toLocaleString("en-US", { hour: "numeric", minute: "numeric", hour12: true }),
+      time: new Date().toLocaleString("en-US", {
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+      }),
     }
 
-    // In a real app, you would update this in a database
-    // For this demo, we'll just log it
     console.log("New transaction:", newTransaction)
 
     // Reset payment data
     setPaymentAmount("")
     setCustomerName("")
+    setCustomerAddress("")
   }
 
   return (
     <div className="page-container page-green">
+      {/* Page Header */}
       <div className="page-header">
         <div>
           <h1 className="page-title">Merchant Portal</h1>
@@ -97,6 +135,7 @@ export default function MerchantPage() {
         </button>
       </div>
 
+      {/* Tabs: Rewards / Scanner / Stats */}
       <div className="tabs">
         <div className="tabs-list">
           <button
@@ -119,6 +158,7 @@ export default function MerchantPage() {
           </button>
         </div>
 
+        {/* REWARDS TAB */}
         <div className={`tab-content ${activeTab === "rewards" ? "active" : ""}`}>
           <div className="card mb-6">
             <div className="card-content">
@@ -143,7 +183,9 @@ export default function MerchantPage() {
                     <label htmlFor="store-credit" className="input-label">
                       Enable as Store Credit
                     </label>
-                    <p className="text-xs text-gray-500">Allow customers to use as payment</p>
+                    <p className="text-xs text-gray-500">
+                      Allow customers to use as payment
+                    </p>
                   </div>
                   <label className="switch">
                     <input
@@ -180,7 +222,9 @@ export default function MerchantPage() {
             </div>
           </div>
 
-          <h3 className="text-lg font-medium mb-4 text-gray-800">Bonus Redemptions</h3>
+          <h3 className="text-lg font-medium mb-4 text-gray-800">
+            Bonus Redemptions
+          </h3>
           <div className="space-y-4">
             <div className="card">
               <div className="card-content">
@@ -227,21 +271,31 @@ export default function MerchantPage() {
           </div>
         </div>
 
+        {/* SCANNER TAB */}
         <div className={`tab-content ${activeTab === "scanner" ? "active" : ""}`}>
           <div className="card mb-6">
             <div className="card-content flex flex-col items-center">
               <div className="icon-bg-green p-4 rounded-xl mb-4">
                 <QrCode size={48} />
               </div>
-              <h3 className="text-lg font-medium text-gray-800 mb-2">Scan Customer QR Code</h3>
-              <p className="text-sm text-gray-500 text-center mb-4">Scan to issue rewards or collect payment</p>
-              <button onClick={openScanner} className="btn btn-secondary btn-full py-6">
+              <h3 className="text-lg font-medium text-gray-800 mb-2">
+                Scan Customer QR Code
+              </h3>
+              <p className="text-sm text-gray-500 text-center mb-4">
+                Scan to issue rewards or collect payment
+              </p>
+              <button
+                onClick={openScanner}
+                className="btn btn-secondary btn-full py-6"
+              >
                 Open Scanner
               </button>
             </div>
           </div>
 
-          <h3 className="text-lg font-medium mb-4 text-gray-800">Recent Transactions</h3>
+          <h3 className="text-lg font-medium mb-4 text-gray-800">
+            Recent Transactions
+          </h3>
           <div className="space-y-3">
             <div className="card">
               <div className="card-content p-3">
@@ -251,7 +305,9 @@ export default function MerchantPage() {
                   </div>
                   <div className="flex-1">
                     <div className="flex justify-between">
-                      <p className="font-medium text-sm text-gray-800">John D.</p>
+                      <p className="font-medium text-sm text-gray-800">
+                        John D.
+                      </p>
                       <div className="badge badge-green">+25 points</div>
                     </div>
                     <p className="text-xs text-gray-500">Today, 9:30 AM</p>
@@ -268,7 +324,9 @@ export default function MerchantPage() {
                   </div>
                   <div className="flex-1">
                     <div className="flex justify-between">
-                      <p className="font-medium text-sm text-gray-800">Sarah M.</p>
+                      <p className="font-medium text-sm text-gray-800">
+                        Sarah M.
+                      </p>
                       <div className="flex items-center">
                         <div className="badge badge-blue mr-1">$12.50</div>
                         <div className="badge badge-green">+12 points</div>
@@ -282,11 +340,11 @@ export default function MerchantPage() {
           </div>
         </div>
 
+        {/* STATS TAB */}
         <div className={`tab-content ${activeTab === "stats" ? "active" : ""}`}>
           <div className="card mb-6">
             <div className="card-content">
               <h3 className="card-title mb-4">Rewards Overview</h3>
-
               <div className="stats-grid mb-4">
                 <div className="stat-card purple-bg">
                   <p className="stat-label">Total Points Issued</p>
@@ -305,7 +363,6 @@ export default function MerchantPage() {
                   <p className="stat-value orange-text">34.7%</p>
                 </div>
               </div>
-
               <button className="btn btn-outline btn-full py-3">
                 View Detailed Analytics
                 <ArrowRight size={16} className="ml-2" />
@@ -328,7 +385,10 @@ export default function MerchantPage() {
                       <p className="font-medium text-gray-800">42</p>
                     </div>
                     <div className="progress-container">
-                      <div className="progress-bar progress-purple" style={{ width: "70%" }}></div>
+                      <div
+                        className="progress-bar progress-purple"
+                        style={{ width: "70%" }}
+                      ></div>
                     </div>
                   </div>
                 </div>
@@ -343,7 +403,10 @@ export default function MerchantPage() {
                       <p className="font-medium text-gray-800">28</p>
                     </div>
                     <div className="progress-container">
-                      <div className="progress-bar progress-blue" style={{ width: "45%" }}></div>
+                      <div
+                        className="progress-bar progress-blue"
+                        style={{ width: "45%" }}
+                      ></div>
                     </div>
                   </div>
                 </div>
@@ -354,16 +417,27 @@ export default function MerchantPage() {
       </div>
 
       {/* QR Scanner Modal */}
-      {showScanner && <QRScanner onScan={handleScan} onClose={handleCloseScanner} />}
+      {showScanner && (
+        <QRScanner onScan={handleScan} onClose={handleCloseScanner} />
+      )}
 
       {/* Payment Confirmation Modal */}
       {showConfirmation && scannedData && (
-        <PaymentConfirmation qrData={scannedData} onConfirm={handleConfirmPayment} onCancel={handleCloseConfirmation} />
+        <PaymentConfirmation
+          qrData={scannedData}
+          onConfirm={handleConfirmPayment}
+          onCancel={handleCloseConfirmation}
+        />
       )}
 
       {/* Payment Success Modal */}
-      {showSuccess && <PaymentSuccess amount={paymentAmount} username={customerName} onClose={handleCloseSuccess} />}
+      {showSuccess && (
+        <PaymentSuccess
+          amount={paymentAmount}
+          username={customerName}
+          onClose={handleCloseSuccess}
+        />
+      )}
     </div>
   )
 }
-
