@@ -79,6 +79,8 @@ export default function MerchantRewardsPage() {
                   <div className="icon-bg-blue p-2 rounded-xl mr-3">
                     <Image
                       src={reward.image || "/placeholder.svg"}
+                      width={64}
+                      height={64}
                       alt={reward.name}
                       className="w-12 h-12 object-contain"
                     />

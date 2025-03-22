@@ -2,12 +2,88 @@
 
 import { useState } from "react"
 import { Check, CreditCard, Gift, Plus, QrCode, Settings, Zap, ArrowRight } from "lucide-react"
+import QRScanner from "../components/QRScanner"
+import PaymentConfirmation from "../components/PaymentConfirmation"
+import PaymentSuccess from "../components/PaymentSuccess"
 
 export default function MerchantPage() {
   const [tokenName, setTokenName] = useState("")
   const [storeCredit, setStoreCredit] = useState(false)
   const [exchangeRate, setExchangeRate] = useState("1")
   const [activeTab, setActiveTab] = useState("rewards")
+
+  // Scanner state
+  const [showScanner, setShowScanner] = useState(false)
+  const [scannedData, setScannedData] = useState<string | null>(null)
+  const [showConfirmation, setShowConfirmation] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
+  const [paymentAmount, setPaymentAmount] = useState("")
+  const [customerName, setCustomerName] = useState("")
+
+  const handleScan = (data: string) => {
+    setScannedData(data)
+    setShowConfirmation(true)
+
+    try {
+      const parsedData = JSON.parse(data)
+      setPaymentAmount(parsedData.amount)
+      setCustomerName(parsedData.username)
+    } catch (error) {
+      console.error("Error parsing QR data:", error)
+    }
+  }
+
+  const handleConfirmPayment = () => {
+    setShowConfirmation(false)
+    setShowSuccess(true)
+  }
+
+  // Update the openScanner function to ensure the scanner is properly contained
+
+  const openScanner = () => {
+    // Ensure the body doesn't scroll when scanner is open
+    if (typeof document !== "undefined") {
+      document.body.style.overflow = "hidden"
+    }
+    setShowScanner(true)
+  }
+
+  // Update the handleCloseScanner function to restore scrolling
+  const handleCloseScanner = () => {
+    if (typeof document !== "undefined") {
+      document.body.style.overflow = ""
+    }
+    setShowScanner(false)
+  }
+
+  const handleCloseConfirmation = () => {
+    setShowConfirmation(false)
+    setScannedData(null)
+  }
+
+  // Update the handleCloseSuccess function to properly return to the merchant page
+  const handleCloseSuccess = () => {
+    setShowSuccess(false)
+    setScannedData(null)
+    setActiveTab("scanner") // Keep on scanner tab after success
+
+    // Add a new transaction to the recent transactions list
+    const newTransaction = {
+      id: Date.now().toString(),
+      name: customerName.split(" ")[0] || "Customer",
+      amount: paymentAmount,
+      points: Math.floor(Number.parseFloat(paymentAmount)),
+      time: new Date().toLocaleString("en-US", { hour: "numeric", minute: "numeric", hour12: true }),
+    }
+
+    // In a real app, you would update this in a database
+    // For this demo, we'll just log it
+    console.log("New transaction:", newTransaction)
+
+    // Reset payment data
+    setPaymentAmount("")
+    setCustomerName("")
+  }
 
   return (
     <div className="page-container page-green">
@@ -159,7 +235,9 @@ export default function MerchantPage() {
               </div>
               <h3 className="text-lg font-medium text-gray-800 mb-2">Scan Customer QR Code</h3>
               <p className="text-sm text-gray-500 text-center mb-4">Scan to issue rewards or collect payment</p>
-              <button className="btn btn-secondary btn-full py-6">Open Scanner</button>
+              <button onClick={openScanner} className="btn btn-secondary btn-full py-6">
+                Open Scanner
+              </button>
             </div>
           </div>
 
@@ -274,6 +352,17 @@ export default function MerchantPage() {
           </div>
         </div>
       </div>
+
+      {/* QR Scanner Modal */}
+      {showScanner && <QRScanner onScan={handleScan} onClose={handleCloseScanner} />}
+
+      {/* Payment Confirmation Modal */}
+      {showConfirmation && scannedData && (
+        <PaymentConfirmation qrData={scannedData} onConfirm={handleConfirmPayment} onCancel={handleCloseConfirmation} />
+      )}
+
+      {/* Payment Success Modal */}
+      {showSuccess && <PaymentSuccess amount={paymentAmount} username={customerName} onClose={handleCloseSuccess} />}
     </div>
   )
 }
