@@ -1,26 +1,135 @@
 /* eslint-disable react/no-unescaped-entities */
 "use client"
 
-import { useState } from "react"
-import { Wallet, Share2 } from "lucide-react"
+import { Shield, Zap, Wallet, Share2, Lock } from "lucide-react"
+import { useEffect, useState } from "react"
 import Image from "next/image"
-import QRCode from "../app/components/Qrcode"
+import QRCode from "./components/Qrcode"
+import { useAuth } from "./context/AuthContext"
+import AuthForm from "./components/AuthForm"
+
+// Placeholder images
+const COFFEE_SHOP_IMG = "/placeholder.svg?height=32&width=32"
+const GROCERY_STORE_IMG = "/placeholder.svg?height=32&width=32"
 
 export default function Home() {
+  const [walletAddress, setWalletAddress] = useState("")
   const [paymentAmount, setPaymentAmount] = useState("")
   const [showPayment, setShowPayment] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [showZkInfo, setShowZkInfo] = useState(false)
 
-  // This would be the user's wallet address in a real implementation
-  const userAddress = "0x1a2b3c4d5e6f7g8h9i0j"
+  const { isAuthenticated, username } = useAuth()
 
-  // In a real implementation, this would generate a QR code with payment info
-  const qrValue = showPayment && paymentAmount ? `${userAddress}?amount=${paymentAmount}` : userAddress
+  // Check if already connected on mount
+  useEffect(() => {
+    // const connected = localStorage.getItem("walletConnected") === "true"
+    const address = localStorage.getItem("walletAddress") || ""
 
+    setWalletAddress(address)
+    setLoading(false)
+  }, [])
+
+  // QR code value
+  const qrValue = showPayment && paymentAmount ? `${walletAddress}?amount=${paymentAmount}` : walletAddress
+
+  // If still loading, show nothing to prevent flash
+  if (loading) {
+    return null
+  }
+
+  // Show login screen if not connected
+  if (!isAuthenticated) {
+    return (
+      <div className="page-container page-purple flex flex-col items-center justify-center p-8">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold mb-2">ImPayQ</h1>
+          <p className="text-gray-600 mb-4">Blockchain-powered loyalty rewards</p>
+        </div>
+
+        <div className="w-full max-w-md mx-auto mb-8">
+          <AuthForm />
+        </div>
+
+        <div className="grid grid-cols-3 gap-4 w-full max-w-md mx-auto">
+          <div className="card">
+            <div className="card-content text-center">
+              <div className="icon-bg-blue p-3 rounded-full mx-auto mb-3 w-12 h-12 flex items-center justify-center">
+                <Shield size={24} />
+              </div>
+              <h3 className="font-medium mb-1">Secure</h3>
+              <p className="text-xs text-gray-500">Blockchain-powered security</p>
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="card-content text-center">
+              <div className="icon-bg-green p-3 rounded-full mx-auto mb-3 w-12 h-12 flex items-center justify-center">
+                <Zap size={24} />
+              </div>
+              <h3 className="font-medium mb-1">Rewards</h3>
+              <p className="text-xs text-gray-500">Earn at every purchase</p>
+            </div>
+          </div>
+
+          <div className="card" onClick={() => setShowZkInfo(!showZkInfo)}>
+            <div className="card-content text-center">
+              <div className="icon-bg-purple p-3 rounded-full mx-auto mb-3 w-12 h-12 flex items-center justify-center">
+                <Lock size={24} />
+              </div>
+              <h3 className="font-medium mb-1">ZK Email</h3>
+              <p className="text-xs text-gray-500">Zero-knowledge security</p>
+            </div>
+          </div>
+        </div>
+
+        {showZkInfo && (
+          <div className="card w-full max-w-md mx-auto mt-4">
+            <div className="card-content">
+              <h3 className="font-medium text-purple-700 mb-2">What is ZK Email?</h3>
+              <p className="text-sm text-gray-600 mb-3">
+                ZK Email is a powerful system that verifies emails using zero-knowledge proofs, based on the DKIM
+                protocol.
+              </p>
+              <div className="space-y-3">
+                <div className="flex items-start">
+                  <div className="icon-bg-purple p-1 rounded-full mr-2 mt-0.5">
+                    <Shield size={12} className="text-white" />
+                  </div>
+                  <p className="text-sm text-gray-600">Your email is verified without revealing its contents</p>
+                </div>
+                <div className="flex items-start">
+                  <div className="icon-bg-purple p-1 rounded-full mr-2 mt-0.5">
+                    <Shield size={12} className="text-white" />
+                  </div>
+                  <p className="text-sm text-gray-600">Authentication happens through cryptographic proofs</p>
+                </div>
+                <div className="flex items-start">
+                  <div className="icon-bg-purple p-1 rounded-full mr-2 mt-0.5">
+                    <Shield size={12} className="text-white" />
+                  </div>
+                  <p className="text-sm text-gray-600">Your privacy is protected through zero-knowledge technology</p>
+                </div>
+                <div className="flex items-start">
+                  <div className="icon-bg-purple p-1 rounded-full mr-2 mt-0.5">
+                    <Shield size={12} className="text-white" />
+                  </div>
+                  <p className="text-sm text-gray-600">No passwords needed - just access to your email</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // Show home dashboard for connected users
   return (
     <div className="page-container page-purple">
       <div className="page-header">
         <div>
-          <h2 className="page-subtitle">Hello, Antonio!</h2>
+          <h2 className="page-subtitle">Hello, {username || "User"}!</h2>
           <h1 className="page-title">Let's get rewarded!</h1>
         </div>
         <div className="icon-bg-purple p-2 rounded-full">
@@ -29,7 +138,6 @@ export default function Home() {
       </div>
 
       <div className="qr-container">
-        <div className="qr-blur"></div>
         <div className="qr-card">
           <div className="qr-gradient"></div>
           <div className="qr-content">
@@ -72,7 +180,7 @@ export default function Home() {
           <div className="activity-item">
             <div className="activity-icon">
               <Image
-                src="/placeholder.svg?height=32&width=32"
+                src={COFFEE_SHOP_IMG || "/placeholder.svg"}
                 width={32}
                 height={32}
                 alt="Coffee Shop"
@@ -90,7 +198,7 @@ export default function Home() {
           <div className="activity-item">
             <div className="activity-icon">
               <Image
-                src="/placeholder.svg?height=32&width=32"
+                src={GROCERY_STORE_IMG || "/placeholder.svg"}
                 width={32}
                 height={32}
                 alt="Grocery Store"

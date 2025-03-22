@@ -1,7 +1,38 @@
+"use client"
+
 import { Bell, ChevronRight, Copy, HelpCircle, Lock, LogOut, Shield } from "lucide-react"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
+import { useAuth } from "../context/AuthContext"
+
+// Placeholder image
+const USER_AVATAR = "/placeholder.svg?height=64&width=64"
 
 export default function SettingsPage() {
+  const router = useRouter()
+  const [walletAddress, setWalletAddress] = useState<string>("")
+  const { logout, username, userEmailAddr } = useAuth()
+
+  // Get wallet address from localStorage on component mount
+  useEffect(() => {
+    const storedAddress = localStorage.getItem("walletAddress")
+    if (storedAddress) {
+      setWalletAddress(storedAddress)
+    }
+  }, [])
+
+  // Format wallet address for display
+  const formattedAddress = walletAddress
+    ? `${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}`
+    : "0x1a2...9i0j"
+
+  // Handle logout
+  const handleLogout = async () => {
+    logout()
+    router.push("/")
+  }
+
   return (
     <div className="page-container page-purple">
       <h1 className="page-title mb-6">Profile</h1>
@@ -11,11 +42,11 @@ export default function SettingsPage() {
           <div className="card-content">
             <div className="flex items-center gap-4">
               <div className="avatar">
-                <Image src="/placeholder.svg?height=64&width=64" width={64} height={64} alt="User" />
+                <Image src={USER_AVATAR || "/placeholder.svg"} height={64} width={64} alt="User" />
               </div>
               <div>
-                <h3 className="font-medium text-gray-800">John Doe</h3>
-                <p className="text-sm text-gray-500">john.doe@example.com</p>
+                <h3 className="font-medium text-gray-800">{username || "User"}</h3>
+                <p className="text-sm text-gray-500">{userEmailAddr || "user@example.com"}</p>
                 <button className="btn btn-link p-0 h-auto text-purple-500 text-sm">Edit Profile</button>
               </div>
             </div>
@@ -33,8 +64,15 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between mb-4">
                 <div className="text-sm font-medium text-gray-700">Wallet Address</div>
                 <div className="flex items-center">
-                  <code className="code mr-2">0x1a2...9i0j</code>
-                  <button className="btn btn-outline btn-icon rounded-full">
+                  <code className="code mr-2">{formattedAddress}</code>
+                  <button
+                    className="btn btn-outline btn-icon rounded-full"
+                    onClick={() => {
+                      if (navigator.clipboard) {
+                        navigator.clipboard.writeText(walletAddress)
+                      }
+                    }}
+                  >
                     <Copy size={16} className="text-gray-500" />
                   </button>
                 </div>
@@ -115,7 +153,11 @@ export default function SettingsPage() {
             Help & Support
           </button>
 
-          <button className="btn btn-primary rounded-full py-3" style={{ backgroundColor: "var(--color-red-500)" }}>
+          <button
+            onClick={handleLogout}
+            className="btn btn-primary rounded-full py-3"
+            style={{ backgroundColor: "var(--color-red-500)" }}
+          >
             <LogOut size={20} className="mr-2" />
             Sign Out
           </button>
