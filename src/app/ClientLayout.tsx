@@ -8,6 +8,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { Home, CreditCard, History, Settings, Store } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
+import { useAuth } from "./context/AuthContext"
 
 const poppins = Poppins({
   weight: ["400", "500", "600", "700"],
@@ -22,13 +23,14 @@ export default function ClientLayout({
   const [isConnected, setIsConnected] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
+  const { isAuthenticated } = useAuth()
 
   // Check wallet connection status
   useEffect(() => {
     // Check if running in browser environment
     if (typeof window !== "undefined") {
       const checkConnection = () => {
-        const connected = localStorage.getItem("walletConnected") === "true"
+        const connected = localStorage.getItem("walletConnected") === "true" || isAuthenticated
         setIsConnected(connected)
 
         // Redirect to home if not connected and trying to access protected routes
@@ -44,15 +46,11 @@ export default function ClientLayout({
       // Set up event listener for storage changes (in case another tab changes connection state)
       window.addEventListener("storage", checkConnection)
 
-      // Check connection status periodically to ensure it's up to date
-      const interval = setInterval(checkConnection, 1000)
-
       return () => {
         window.removeEventListener("storage", checkConnection)
-        clearInterval(interval)
       }
     }
-  }, [pathname, router])
+  }, [pathname, router, isAuthenticated])
 
   const navItems = [
     { icon: Home, label: "Home", href: "/" },

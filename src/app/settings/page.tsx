@@ -1,49 +1,37 @@
-"use client";
+"use client"
 
-import {
-  Bell,
-  ChevronRight,
-  Copy,
-  HelpCircle,
-  Lock,
-  LogOut,
-  Shield,
-} from "lucide-react";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { usePrivy } from "@privy-io/react-auth";
+import { Bell, ChevronRight, Copy, HelpCircle, Lock, LogOut, Shield } from "lucide-react"
+import Image from "next/image"
+import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
+import { useAuth } from "../context/AuthContext"
+
+// Placeholder image
+const USER_AVATAR = "/placeholder.svg?height=64&width=64"
 
 export default function SettingsPage() {
-  const router = useRouter();
-  const [walletAddress, setWalletAddress] = useState<string>("");
-  const { ready, authenticated, logout } = usePrivy();
-
-  // Disable logout when Privy is not ready or the user is not authenticated
-  const disableLogout = !ready || (ready && !authenticated);
+  const router = useRouter()
+  const [walletAddress, setWalletAddress] = useState<string>("")
+  const { logout, username, userEmailAddr } = useAuth()
 
   // Get wallet address from localStorage on component mount
   useEffect(() => {
-    const storedAddress = localStorage.getItem("walletAddress");
+    const storedAddress = localStorage.getItem("walletAddress")
     if (storedAddress) {
-      setWalletAddress(storedAddress);
+      setWalletAddress(storedAddress)
     }
-  }, []);
+  }, [])
 
   // Format wallet address for display
   const formattedAddress = walletAddress
-    ? `${walletAddress.substring(0, 6)}...${walletAddress.substring(
-        walletAddress.length - 4
-      )}`
-    : "0x1a2...9i0j";
+    ? `${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}`
+    : "0x1a2...9i0j"
 
   // Handle logout
   const handleLogout = async () => {
-    await logout();
-    localStorage.removeItem("walletConnected");
-    localStorage.removeItem("walletAddress");
-    router.push("/");
-  };
+    logout()
+    router.push("/")
+  }
 
   return (
     <div className="page-container page-purple">
@@ -54,19 +42,12 @@ export default function SettingsPage() {
           <div className="card-content">
             <div className="flex items-center gap-4">
               <div className="avatar">
-                <Image
-                  src="/placeholder.svg?height=64&width=64"
-                  height={64}
-                  width={64}
-                  alt="User"
-                />
+                <Image src={USER_AVATAR || "/placeholder.svg"} height={64} width={64} alt="User" />
               </div>
               <div>
-                <h3 className="font-medium text-gray-800">John Doe</h3>
-                <p className="text-sm text-gray-500">john.doe@example.com</p>
-                <button className="btn btn-link p-0 h-auto text-purple-500 text-sm">
-                  Edit Profile
-                </button>
+                <h3 className="font-medium text-gray-800">{username || "User"}</h3>
+                <p className="text-sm text-gray-500">{userEmailAddr || "user@example.com"}</p>
+                <button className="btn btn-link p-0 h-auto text-purple-500 text-sm">Edit Profile</button>
               </div>
             </div>
           </div>
@@ -76,23 +57,19 @@ export default function SettingsPage() {
           <div className="card-content p-0">
             <div className="p-4 border-b border-gray-100">
               <h3 className="font-medium text-gray-800 mb-1">Wallet</h3>
-              <p className="text-sm text-gray-500">
-                Your blockchain wallet is securely managed
-              </p>
+              <p className="text-sm text-gray-500">Your blockchain wallet is securely managed</p>
             </div>
 
             <div className="p-4 border-b border-gray-100">
               <div className="flex items-center justify-between mb-4">
-                <div className="text-sm font-medium text-gray-700">
-                  Wallet Address
-                </div>
+                <div className="text-sm font-medium text-gray-700">Wallet Address</div>
                 <div className="flex items-center">
                   <code className="code mr-2">{formattedAddress}</code>
                   <button
                     className="btn btn-outline btn-icon rounded-full"
                     onClick={() => {
                       if (navigator.clipboard) {
-                        navigator.clipboard.writeText(walletAddress);
+                        navigator.clipboard.writeText(walletAddress)
                       }
                     }}
                   >
@@ -131,19 +108,12 @@ export default function SettingsPage() {
               <div className="switch-container">
                 <div className="flex items-center gap-3">
                   <Bell size={20} className="text-purple-500" />
-                  <label
-                    htmlFor="rewards-notifications"
-                    className="text-gray-700"
-                  >
+                  <label htmlFor="rewards-notifications" className="text-gray-700">
                     Rewards Updates
                   </label>
                 </div>
                 <label className="switch">
-                  <input
-                    id="rewards-notifications"
-                    type="checkbox"
-                    defaultChecked
-                  />
+                  <input id="rewards-notifications" type="checkbox" defaultChecked />
                   <span className="switch-slider"></span>
                 </label>
               </div>
@@ -151,19 +121,12 @@ export default function SettingsPage() {
               <div className="switch-container">
                 <div className="flex items-center gap-3">
                   <Bell size={20} className="text-purple-500" />
-                  <label
-                    htmlFor="payment-notifications"
-                    className="text-gray-700"
-                  >
+                  <label htmlFor="payment-notifications" className="text-gray-700">
                     Payment Confirmations
                   </label>
                 </div>
                 <label className="switch">
-                  <input
-                    id="payment-notifications"
-                    type="checkbox"
-                    defaultChecked
-                  />
+                  <input id="payment-notifications" type="checkbox" defaultChecked />
                   <span className="switch-slider"></span>
                 </label>
               </div>
@@ -171,10 +134,7 @@ export default function SettingsPage() {
               <div className="switch-container">
                 <div className="flex items-center gap-3">
                   <Bell size={20} className="text-purple-500" />
-                  <label
-                    htmlFor="marketing-notifications"
-                    className="text-gray-700"
-                  >
+                  <label htmlFor="marketing-notifications" className="text-gray-700">
                     Marketing & Promotions
                   </label>
                 </div>
@@ -194,7 +154,6 @@ export default function SettingsPage() {
           </button>
 
           <button
-            disabled={disableLogout}
             onClick={handleLogout}
             className="btn btn-primary rounded-full py-3"
             style={{ backgroundColor: "var(--color-red-500)" }}
@@ -205,5 +164,6 @@ export default function SettingsPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }
+

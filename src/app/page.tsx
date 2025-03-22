@@ -1,56 +1,34 @@
 /* eslint-disable react/no-unescaped-entities */
 "use client"
 
-import { Shield, Zap, Wallet, Share2 } from "lucide-react"
+import { Shield, Zap, Wallet, Share2, Lock } from "lucide-react"
 import { useEffect, useState } from "react"
 import Image from "next/image"
 import QRCode from "./components/Qrcode"
-import { useLogin, useWallets, usePrivy } from "@privy-io/react-auth"
+import { useAuth } from "./context/AuthContext"
+import AuthForm from "./components/AuthForm"
+
+// Placeholder images
+const COFFEE_SHOP_IMG = "/placeholder.svg?height=32&width=32"
+const GROCERY_STORE_IMG = "/placeholder.svg?height=32&width=32"
 
 export default function Home() {
-  const [isConnected, setIsConnected] = useState(false)
   const [walletAddress, setWalletAddress] = useState("")
   const [paymentAmount, setPaymentAmount] = useState("")
   const [showPayment, setShowPayment] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [showZkInfo, setShowZkInfo] = useState(false)
 
-  const { ready, authenticated } = usePrivy()
-  const { wallets } = useWallets();
-  const { login } = useLogin()
-  // Disable login when Privy is not ready or the user is already authenticated
-  const disableLogin = !ready || (ready && authenticated)
-
-  // Function to handle wallet connection
-  const handleConnect = () => {
-    console.log("Connecting wallet...")
-    const newAddress = wallets[0].address
-
-    // Store connection state in localStorage
-    localStorage.setItem("walletConnected", "true")
-    localStorage.setItem("walletAddress", newAddress)
-
-    // Force a reload to ensure all components pick up the new connection state
-    window.location.reload()
-  }
+  const { isAuthenticated, username } = useAuth()
 
   // Check if already connected on mount
   useEffect(() => {
-    const connected = localStorage.getItem("walletConnected") === "true"
+    // const connected = localStorage.getItem("walletConnected") === "true"
     const address = localStorage.getItem("walletAddress") || ""
 
-    setIsConnected(connected)
     setWalletAddress(address)
     setLoading(false)
   }, [])
-
-  // *Here's the new effect*:
-  // If user is authenticated via Privy but not yet connected, auto‐trigger handleConnect()
-  useEffect(() => {
-    if (authenticated && !isConnected) {
-      handleConnect()
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authenticated, isConnected])
 
   // QR code value
   const qrValue = showPayment && paymentAmount ? `${walletAddress}?amount=${paymentAmount}` : walletAddress
@@ -61,72 +39,22 @@ export default function Home() {
   }
 
   // Show login screen if not connected
-  if (!isConnected) {
+  if (!isAuthenticated) {
     return (
       <div className="page-container page-purple flex flex-col items-center justify-center p-8">
-        <div className="text-center mb-12">
+        <div className="text-center mb-8">
           <h1 className="text-3xl font-bold mb-2">ImPayQ</h1>
-          <p className="text-gray-600 mb-8">Blockchain-powered loyalty rewards</p>
+          <p className="text-gray-600 mb-4">Blockchain-powered loyalty rewards</p>
         </div>
 
-        <div className="card w-full mb-8">
-          <div className="card-content text-center">
-            <div className="icon-bg-purple p-4 rounded-full mx-auto mb-4">
-              <svg
-                width="32"
-                height="32"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M12 8V12L14 14"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </div>
-            <h2 className="text-xl font-semibold mb-2">Connect Your Wallet</h2>
-            <p className="text-gray-500 mb-6">Connect your wallet to access rewards and payments</p>
-
-            <button
-              disabled={disableLogin}
-              onClick={() =>
-                login({
-                  loginMethods: ["wallet"],
-                  walletChainType: "ethereum-only",
-                  disableSignup: false,
-                })
-              }
-              style={{
-                backgroundColor: "#fb923c",
-                color: "white",
-                padding: "16px",
-                borderRadius: "9999px",
-                width: "100%",
-                fontWeight: "500",
-                cursor: "pointer",
-                border: "none",
-              }}
-            >
-              Connect Wallet
-            </button>
-          </div>
+        <div className="w-full max-w-md mx-auto mb-8">
+          <AuthForm />
         </div>
 
-        <div className="grid grid-cols-2 gap-4 w-full">
+        <div className="grid grid-cols-3 gap-4 w-full max-w-md mx-auto">
           <div className="card">
             <div className="card-content text-center">
-              <div className="icon-bg-blue p-3 rounded-full mx-auto mb-3">
+              <div className="icon-bg-blue p-3 rounded-full mx-auto mb-3 w-12 h-12 flex items-center justify-center">
                 <Shield size={24} />
               </div>
               <h3 className="font-medium mb-1">Secure</h3>
@@ -136,14 +64,62 @@ export default function Home() {
 
           <div className="card">
             <div className="card-content text-center">
-              <div className="icon-bg-green p-3 rounded-full mx-auto mb-3">
+              <div className="icon-bg-green p-3 rounded-full mx-auto mb-3 w-12 h-12 flex items-center justify-center">
                 <Zap size={24} />
               </div>
               <h3 className="font-medium mb-1">Rewards</h3>
               <p className="text-xs text-gray-500">Earn at every purchase</p>
             </div>
           </div>
+
+          <div className="card" onClick={() => setShowZkInfo(!showZkInfo)}>
+            <div className="card-content text-center">
+              <div className="icon-bg-purple p-3 rounded-full mx-auto mb-3 w-12 h-12 flex items-center justify-center">
+                <Lock size={24} />
+              </div>
+              <h3 className="font-medium mb-1">ZK Email</h3>
+              <p className="text-xs text-gray-500">Zero-knowledge security</p>
+            </div>
+          </div>
         </div>
+
+        {showZkInfo && (
+          <div className="card w-full max-w-md mx-auto mt-4">
+            <div className="card-content">
+              <h3 className="font-medium text-purple-700 mb-2">What is ZK Email?</h3>
+              <p className="text-sm text-gray-600 mb-3">
+                ZK Email is a powerful system that verifies emails using zero-knowledge proofs, based on the DKIM
+                protocol.
+              </p>
+              <div className="space-y-3">
+                <div className="flex items-start">
+                  <div className="icon-bg-purple p-1 rounded-full mr-2 mt-0.5">
+                    <Shield size={12} className="text-white" />
+                  </div>
+                  <p className="text-sm text-gray-600">Your email is verified without revealing its contents</p>
+                </div>
+                <div className="flex items-start">
+                  <div className="icon-bg-purple p-1 rounded-full mr-2 mt-0.5">
+                    <Shield size={12} className="text-white" />
+                  </div>
+                  <p className="text-sm text-gray-600">Authentication happens through cryptographic proofs</p>
+                </div>
+                <div className="flex items-start">
+                  <div className="icon-bg-purple p-1 rounded-full mr-2 mt-0.5">
+                    <Shield size={12} className="text-white" />
+                  </div>
+                  <p className="text-sm text-gray-600">Your privacy is protected through zero-knowledge technology</p>
+                </div>
+                <div className="flex items-start">
+                  <div className="icon-bg-purple p-1 rounded-full mr-2 mt-0.5">
+                    <Shield size={12} className="text-white" />
+                  </div>
+                  <p className="text-sm text-gray-600">No passwords needed - just access to your email</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     )
   }
@@ -153,7 +129,7 @@ export default function Home() {
     <div className="page-container page-purple">
       <div className="page-header">
         <div>
-          <h2 className="page-subtitle">Hello, Antonio!</h2>
+          <h2 className="page-subtitle">Hello, {username || "User"}!</h2>
           <h1 className="page-title">Let's get rewarded!</h1>
         </div>
         <div className="icon-bg-purple p-2 rounded-full">
@@ -204,7 +180,7 @@ export default function Home() {
           <div className="activity-item">
             <div className="activity-icon">
               <Image
-                src="/placeholder.svg?height=32&width=32"
+                src={COFFEE_SHOP_IMG || "/placeholder.svg"}
                 width={32}
                 height={32}
                 alt="Coffee Shop"
@@ -222,7 +198,7 @@ export default function Home() {
           <div className="activity-item">
             <div className="activity-icon">
               <Image
-                src="/placeholder.svg?height=32&width=32"
+                src={GROCERY_STORE_IMG || "/placeholder.svg"}
                 width={32}
                 height={32}
                 alt="Grocery Store"
@@ -242,3 +218,4 @@ export default function Home() {
     </div>
   )
 }
+
