@@ -75,6 +75,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         if(cachedStoragestr){
           const wallet = (await getDeployedTestAccountsWallets(pxe))[accountType === "test0" ? 0 : 1];
           const cached = cachedStoragestr ? (JSON.parse(cachedStoragestr) as ClientCache) : null
+          console.log(accountType)
           console.log(cached, "CLIENT CACHE")
           console.log(wallet, "WALLET AZTEC SET")
           setClientCache(cached)
