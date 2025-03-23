@@ -2,9 +2,6 @@
 
 import type React from "react"
 import { createContext, useContext, useState, type ReactNode, useEffect } from "react"
-import { OauthClient } from "@zk-email/oauth-sdk"
-import { type Address, createPublicClient, http } from "viem"
-import { baseSepolia } from "viem/chains"
 import { getDeployedTestAccountsWallets } from '@aztec/accounts/testing';
 import { AccountWalletWithSecretKey, createPXEClient } from "@aztec/aztec.js"
 
@@ -133,7 +130,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setIsAuthenticated(true)
 
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clientCache])
 
 

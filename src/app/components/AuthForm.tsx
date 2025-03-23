@@ -5,11 +5,8 @@ import { useAuth, PageState } from "../context/AuthContext"
 import { Wallet, Lock } from 'lucide-react'
 import EmailVerificationLoader from "./EmailVerificationLoader"
 
-const emailRegex: RegExp = /^[A-Za-z0-9!#$%&'*+=?\\-\\^_`{|}~./@]+@[A-Za-z0-9.\\-]+$/;
-
 export default function AuthForm() {
   const [activeTab, setActiveTab] = useState<"userTab" | "merchantTab">("userTab")
-  const [isFormValid, setIsFormValid] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   
   const {
@@ -19,7 +16,6 @@ export default function AuthForm() {
     setUsername,
     pageState,
     setPageState,
-    setAccountType,
     Activation
   } = useAuth()
 
@@ -32,6 +28,7 @@ export default function AuthForm() {
       setUserEmailAddr("test1@example.com")
       setUsername("test1MerchantAccount")
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab])
 
   const handleSubmit = async () => {
