@@ -10,6 +10,7 @@ import AuthForm from "./components/AuthForm"
 import { TokenContract } from "@aztec/noir-contracts.js/Token";
 import { AztecAddress, createPXEClient } from "@aztec/aztec.js"
 import { getDeployedTestAccountsWallets } from "@aztec/accounts/testing"
+import { useTransferToken } from "./context/useTransferToken"
 
 // Placeholder images
 const COFFEE_SHOP_IMG = "/placeholder.svg?height=32&width=32"
@@ -27,6 +28,7 @@ export default function Home() {
     // const pxe = createPXEClient(PXE_URL);
 
   const { isAuthenticated, username , clientCache, aztecWallet} = useAuth()
+  const { mintTokensToPrivate} = useTransferToken()
 
   // Check if already connected on mount
   useEffect(() => {
@@ -52,6 +54,8 @@ export default function Home() {
           let balance = await TokenContractUsdc.methods.balance_of_private(aztecWallet.getAddress()).simulate()
           
           setUserBalance(balance)
+
+          // await mintTokensToPrivate(aztecWallet, AztecAddress.fromString("0x2a4c7cded97e40031f16c917ab8da8852a1b6da7bf136b32c163d8b16a80acba"), BigInt(50))
           } catch(err){
             console.log(err, "ERROR ")
           }
