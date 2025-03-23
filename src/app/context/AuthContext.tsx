@@ -5,6 +5,9 @@ import { createContext, useContext, useState, type ReactNode, useEffect } from "
 import { OauthClient } from "@zk-email/oauth-sdk"
 import { type Address, createPublicClient, http } from "viem"
 import { baseSepolia } from "viem/chains"
+import { getDeployedTestAccountsWallets } from '@aztec/accounts/testing';
+import { createPXEClient } from "@aztec/aztec.js"
+
 
 export type StateContextType = {
   userEmailAddr: string
@@ -41,6 +44,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const coreAddress = process.env.NEXT_PUBLIC_CORE_ADDRESS || ""
   const oauthAddress = process.env.NEXT_PUBLIC_OAUTH_ADDRESS || ""
   const relayerHost = process.env.NEXT_PUBLIC_RELAYER_HOST || ""
+  const PXE_URL = process.env.PXE_URL || 'http://35.228.247.23:8080';
+  const pxe = createPXEClient(PXE_URL);
+
 
   const publicClient = createPublicClient({
     chain: baseSepolia,
@@ -67,6 +73,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [requestId, setRequestId] = useState<number | null>(null)
   const [pageState, setPageState] = useState<PageState>(PageState.landing)
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
+  const [aztecAccount, setAztecAzzount] = useState<string | null>(null)
 
   // Initialize from cache when it's loaded
   useEffect(() => {
@@ -127,6 +134,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     waitForActivation()
   }, [requestId, oauthClient, userEmailAddr, username])
+
+  async function aztecTest() {
+    const wallet = (await getDeployedTestAccountsWallets(pxe))[0];
+
+    console.log(wallet, "WALLET AZTEC")
+  }
+
+
+  useEffect(( ) => {
+    aztecTest()
+  }, [])
+  
 
   const logout = () => {
     localStorage.removeItem("oauthClient")

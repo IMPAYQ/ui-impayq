@@ -8,7 +8,7 @@ import EmailVerificationLoader from "./EmailVerificationLoader"
 const emailRegex: RegExp = /^[A-Za-z0-9!#$%&'*+=?\\-\\^_`{|}~./@]+@[A-Za-z0-9.\\-]+$/;
 
 export default function AuthForm() {
-  const [activeTab, setActiveTab] = useState<"signup" | "signin">("signup")
+  const [activeTab, setActiveTab] = useState<"userTab" | "merchantTab">("userTab")
   const [isFormValid, setIsFormValid] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   
@@ -26,7 +26,7 @@ export default function AuthForm() {
 
   // Validate form
   useEffect(() => {
-    if (activeTab === "signup") {
+    if (activeTab === "userTab") {
       setIsFormValid(
         userEmailAddr !== "" && 
         emailRegex.test(userEmailAddr) && 
@@ -80,23 +80,23 @@ export default function AuthForm() {
         ) : (
           <>
             <p className="text-gray-500 mb-6">
-              {activeTab === "signup" 
+              {activeTab === "userTab" 
                 ? "Create an account with your email" 
                 : "Sign in with your existing account"}
             </p>
             
             <div className="tabs-list mb-6 grid grid-cols-2 bg-white rounded-full p-1">
               <button
-                className={`tab-trigger ${activeTab === "signup" ? "active" : ""}`}
-                onClick={() => setActiveTab("signup")}
+                className={`tab-trigger ${activeTab === "userTab" ? "active" : ""}`}
+                onClick={() => setActiveTab("userTab")}
               >
-                Sign Up
+                User Login
               </button>
               <button
-                className={`tab-trigger ${activeTab === "signin" ? "active" : ""}`}
-                onClick={() => setActiveTab("signin")}
+                className={`tab-trigger ${activeTab === "merchantTab" ? "active" : ""}`}
+                onClick={() => setActiveTab("merchantTab")}
               >
-                Sign In
+                Merchant Login
               </button>
             </div>
             
@@ -104,29 +104,31 @@ export default function AuthForm() {
               <div className="input-container">
                 <input
                   type="email"
-                  placeholder="Enter your email address"
+                  placeholder={activeTab === "userTab" ? "test0@example.com" : "test1@example.com"}
                   value={userEmailAddr}
                   onChange={(e) => setUserEmailAddr(e.target.value)}
                   className="input"
+                  disabled
                 />
               </div>
               
-              {activeTab === "signup" && (
+              {activeTab === "userTab" && (
                 <div className="input-container">
                   <input
                     type="text"
-                    placeholder="Choose a username"
+                    placeholder="test0 user account"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     className="input"
+                    disabled
                   />
                 </div>
               )}
               
               <button
                 onClick={handleSubmit}
-                disabled={!isFormValid || isLoading}
-                className={`btn btn-primary btn-full ${(!isFormValid || isLoading) ? "btn-disabled" : ""}`}
+                disabled={isLoading}
+                className={`btn btn-primary btn-full ${(isLoading) ? "btn-disabled" : ""}`}
               >
                 {isLoading ? "Processing..." : "Continue"}
               </button>
