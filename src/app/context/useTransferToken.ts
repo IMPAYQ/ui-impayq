@@ -7,7 +7,7 @@
 //   networks: number[];
 // }
 
-// export const useBalances = () => {
+// export const useTransferToken = () => {
 //   const PXE_URL = process.env.PXE_URL || 'http://35.228.247.23:8080';
 //   const pxe = createPXEClient(PXE_URL);
 //   const [tokenAddress, setTokenAddress] = useState("0x2d55c209e94816dfe3bbfd6e0f5515738ddc96520dcb1ae1c8a34d6a22a950f4");
