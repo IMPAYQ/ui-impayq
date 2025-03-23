@@ -1,16 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import {
-  Check,
-  CreditCard,
-  Gift,
-  Plus,
-  QrCode,
-  Settings,
-  Zap,
-  ArrowRight,
-} from "lucide-react"
+import { CreditCard, Gift, Plus, QrCode, Settings, ArrowRight, Shield, Lock } from "lucide-react"
 import QRScanner from "../components/QRScanner"
 import PaymentConfirmation from "../components/PaymentConfirmation"
 import PaymentSuccess from "../components/PaymentSuccess"
@@ -34,7 +25,7 @@ export default function MerchantPage() {
 
   // Handle scanned QR data
   const handleScan = (data: string) => {
-    // We’ve received the raw QR data (e.g. "0xABC123...?amount=10")
+    // We've received the raw QR data (e.g. "0xABC123...?amount=10")
     console.log("Scanned data:", data)
     setScannedData(data)
     setShowConfirmation(true)
@@ -61,7 +52,7 @@ export default function MerchantPage() {
         // setCustomerName(scannedUsername)
       }
     } catch (error) {
-      // If something unexpected happens, we’ll see the error here
+      // If something unexpected happens, we'll see the error here
       console.error("Error parsing QR data:", error)
     }
   }
@@ -127,8 +118,8 @@ export default function MerchantPage() {
       {/* Page Header */}
       <div className="page-header">
         <div>
-          <h1 className="page-title">Merchant Portal</h1>
-          <p className="text-gray-500">Manage your rewards program</p>
+          <h1 className="page-title">Business Portal</h1>
+          <p className="text-gray-500">Manage your private payment system</p>
         </div>
         <button className="btn btn-outline btn-icon bg-white">
           <Settings size={20} className="text-gray-600" />
@@ -142,7 +133,7 @@ export default function MerchantPage() {
             className={`tab-trigger ${activeTab === "rewards" ? "active" : ""}`}
             onClick={() => setActiveTab("rewards")}
           >
-            Rewards
+            Tokens
           </button>
           <button
             className={`tab-trigger ${activeTab === "scanner" ? "active" : ""}`}
@@ -154,7 +145,7 @@ export default function MerchantPage() {
             className={`tab-trigger ${activeTab === "stats" ? "active" : ""}`}
             onClick={() => setActiveTab("stats")}
           >
-            Stats
+            Analytics
           </button>
         </div>
 
@@ -171,7 +162,7 @@ export default function MerchantPage() {
                   </label>
                   <input
                     id="token-name"
-                    placeholder="e.g. Coffee Coins"
+                    placeholder="e.g. Privacy Coins"
                     value={tokenName}
                     onChange={(e) => setTokenName(e.target.value)}
                     className="input"
@@ -183,9 +174,7 @@ export default function MerchantPage() {
                     <label htmlFor="store-credit" className="input-label">
                       Enable as Store Credit
                     </label>
-                    <p className="text-xs text-gray-500">
-                      Allow customers to use as payment
-                    </p>
+                    <p className="text-xs text-gray-500">Allow customers to use as private payment</p>
                   </div>
                   <label className="switch">
                     <input
@@ -215,16 +204,14 @@ export default function MerchantPage() {
                 )}
 
                 <button className="btn btn-secondary btn-full py-6">
-                  <Zap size={20} className="mr-2" />
-                  Deploy Token
+                  <Shield size={20} className="mr-2" />
+                  Deploy Private Token
                 </button>
               </div>
             </div>
           </div>
 
-          <h3 className="text-lg font-medium mb-4 text-gray-800">
-            Bonus Redemptions
-          </h3>
+          <h3 className="text-lg font-medium mb-4 text-gray-800">Redemption Options</h3>
           <div className="space-y-4">
             <div className="card">
               <div className="card-content">
@@ -235,7 +222,7 @@ export default function MerchantPage() {
                     </div>
                     <div>
                       <h4 className="font-medium text-gray-800">Free Item</h4>
-                      <p className="text-sm text-gray-500">100 points</p>
+                      <p className="text-sm text-gray-500">100 tokens</p>
                     </div>
                   </div>
                   <button className="btn btn-outline btn-icon">
@@ -254,7 +241,7 @@ export default function MerchantPage() {
                     </div>
                     <div>
                       <h4 className="font-medium text-gray-800">$5 Discount</h4>
-                      <p className="text-sm text-gray-500">50 points</p>
+                      <p className="text-sm text-gray-500">50 tokens</p>
                     </div>
                   </div>
                   <button className="btn btn-outline btn-icon">
@@ -278,37 +265,26 @@ export default function MerchantPage() {
               <div className="icon-bg-green p-4 rounded-xl mb-4">
                 <QrCode size={48} />
               </div>
-              <h3 className="text-lg font-medium text-gray-800 mb-2">
-                Scan Customer QR Code
-              </h3>
-              <p className="text-sm text-gray-500 text-center mb-4">
-                Scan to issue rewards or collect payment
-              </p>
-              <button
-                onClick={openScanner}
-                className="btn btn-secondary btn-full py-6"
-              >
+              <h3 className="text-lg font-medium text-gray-800 mb-2">Scan Customer Private QR</h3>
+              <p className="text-sm text-gray-500 text-center mb-4">Process zero-knowledge payments securely</p>
+              <button onClick={openScanner} className="btn btn-secondary btn-full py-6">
                 Open Scanner
               </button>
             </div>
           </div>
 
-          <h3 className="text-lg font-medium mb-4 text-gray-800">
-            Recent Transactions
-          </h3>
+          <h3 className="text-lg font-medium mb-4 text-gray-800">Recent Private Transactions</h3>
           <div className="space-y-3">
             <div className="card">
               <div className="card-content p-3">
                 <div className="flex items-center">
                   <div className="icon-bg-green p-2 rounded-full mr-3">
-                    <Check size={16} />
+                    <Lock size={16} />
                   </div>
                   <div className="flex-1">
                     <div className="flex justify-between">
-                      <p className="font-medium text-sm text-gray-800">
-                        John D.
-                      </p>
-                      <div className="badge badge-green">+25 points</div>
+                      <p className="font-medium text-sm text-gray-800">John D.</p>
+                      <div className="badge badge-green">+25 tokens</div>
                     </div>
                     <p className="text-xs text-gray-500">Today, 9:30 AM</p>
                   </div>
@@ -320,16 +296,14 @@ export default function MerchantPage() {
               <div className="card-content p-3">
                 <div className="flex items-center">
                   <div className="icon-bg-green p-2 rounded-full mr-3">
-                    <Check size={16} />
+                    <Lock size={16} />
                   </div>
                   <div className="flex-1">
                     <div className="flex justify-between">
-                      <p className="font-medium text-sm text-gray-800">
-                        Sarah M.
-                      </p>
+                      <p className="font-medium text-sm text-gray-800">Sarah M.</p>
                       <div className="flex items-center">
                         <div className="badge badge-blue mr-1">$12.50</div>
-                        <div className="badge badge-green">+12 points</div>
+                        <div className="badge badge-green">+12 tokens</div>
                       </div>
                     </div>
                     <p className="text-xs text-gray-500">Today, 8:15 AM</p>
@@ -344,10 +318,10 @@ export default function MerchantPage() {
         <div className={`tab-content ${activeTab === "stats" ? "active" : ""}`}>
           <div className="card mb-6">
             <div className="card-content">
-              <h3 className="card-title mb-4">Rewards Overview</h3>
+              <h3 className="card-title mb-4">Privacy Analytics</h3>
               <div className="stats-grid mb-4">
                 <div className="stat-card purple-bg">
-                  <p className="stat-label">Total Points Issued</p>
+                  <p className="stat-label">Total Tokens Issued</p>
                   <p className="stat-value purple-text">12,450</p>
                 </div>
                 <div className="stat-card blue-bg">
@@ -355,7 +329,7 @@ export default function MerchantPage() {
                   <p className="stat-value blue-text">87</p>
                 </div>
                 <div className="stat-card green-bg">
-                  <p className="stat-label">Points Redeemed</p>
+                  <p className="stat-label">Tokens Redeemed</p>
                   <p className="stat-value green-text">4,320</p>
                 </div>
                 <div className="stat-card orange-bg">
@@ -385,10 +359,7 @@ export default function MerchantPage() {
                       <p className="font-medium text-gray-800">42</p>
                     </div>
                     <div className="progress-container">
-                      <div
-                        className="progress-bar progress-purple"
-                        style={{ width: "70%" }}
-                      ></div>
+                      <div className="progress-bar progress-purple" style={{ width: "70%" }}></div>
                     </div>
                   </div>
                 </div>
@@ -403,10 +374,7 @@ export default function MerchantPage() {
                       <p className="font-medium text-gray-800">28</p>
                     </div>
                     <div className="progress-container">
-                      <div
-                        className="progress-bar progress-blue"
-                        style={{ width: "45%" }}
-                      ></div>
+                      <div className="progress-bar progress-blue" style={{ width: "45%" }}></div>
                     </div>
                   </div>
                 </div>
@@ -417,27 +385,16 @@ export default function MerchantPage() {
       </div>
 
       {/* QR Scanner Modal */}
-      {showScanner && (
-        <QRScanner onScan={handleScan} onClose={handleCloseScanner} />
-      )}
+      {showScanner && <QRScanner onScan={handleScan} onClose={handleCloseScanner} />}
 
       {/* Payment Confirmation Modal */}
       {showConfirmation && scannedData && (
-        <PaymentConfirmation
-          qrData={scannedData}
-          onConfirm={handleConfirmPayment}
-          onCancel={handleCloseConfirmation}
-        />
+        <PaymentConfirmation qrData={scannedData} onConfirm={handleConfirmPayment} onCancel={handleCloseConfirmation} />
       )}
 
       {/* Payment Success Modal */}
-      {showSuccess && (
-        <PaymentSuccess
-          amount={paymentAmount}
-          username={customerName}
-          onClose={handleCloseSuccess}
-        />
-      )}
+      {showSuccess && <PaymentSuccess amount={paymentAmount} username={customerName} onClose={handleCloseSuccess} />}
     </div>
   )
 }
+

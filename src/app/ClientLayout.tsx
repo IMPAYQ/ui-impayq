@@ -54,10 +54,10 @@ export default function ClientLayout({
 
   const navItems = [
     { icon: Home, label: "Home", href: "/" },
-    { icon: CreditCard, label: "Rewards", href: "/rewards" },
-    { icon: Store, label: "Merchant", href: "/merchant" },
+    { icon: CreditCard, label: "Tokens", href: "/rewards" },
+    { icon: Store, label: "Business", href: "/merchant" },
     { icon: History, label: "History", href: "/history" },
-    { icon: Settings, label: "Profile", href: "/settings" },
+    { icon: Settings, label: "Privacy", href: "/settings" },
   ]
 
   return (

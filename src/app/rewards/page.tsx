@@ -1,6 +1,6 @@
 "use client"
 
-import { Gift, ShoppingBag, Coffee, Utensils, Ticket, ChevronRight } from "lucide-react"
+import { ShoppingBag, Coffee, Utensils, Ticket, ChevronRight, Shield } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
@@ -64,9 +64,9 @@ export default function RewardsPage() {
   return (
     <div className="page-container page-blue">
       <div className="page-header">
-        <h1 className="page-title">Your Rewards</h1>
+        <h1 className="page-title">Private Tokens</h1>
         <div className="badge badge-blue">
-          <Gift size={16} className="mr-1" />
+          <Shield size={16} className="mr-1" />
           <span className="font-semibold">2,750 total</span>
         </div>
       </div>
@@ -81,7 +81,7 @@ export default function RewardsPage() {
                 </div>
                 <div className="flex-1">
                   <h3 className="font-medium">{reward.merchant}</h3>
-                  <p className="text-sm text-gray-500">Available rewards</p>
+                  <p className="text-sm text-gray-500">Available tokens</p>
                 </div>
                 <div className="flex items-center">
                   <div className={`badge ${reward.bgColor} mr-2`}>
@@ -96,15 +96,19 @@ export default function RewardsPage() {
       </div>
 
       <div className="activity-container mt-8">
-        <h3 className="font-medium mb-4 text-gray-700">Recommended for You</h3>
+        <h3 className="font-medium mb-4 text-gray-700">Zero-Knowledge Features</h3>
         <div className="scroll-container">
-          {[...Array(3)].map((_, i) => (
+          {[
+            { title: "Private Payments", desc: "100% confidential" },
+            { title: "No On-Chain Footprint", desc: "Complete privacy" },
+            { title: "Dual Token System", desc: "Rewards & payments" },
+          ].map((item, i) => (
             <div key={i} className="scroll-item">
               <div className="icon-bg-purple p-2 rounded-full mb-2">
-                <Gift size={20} />
+                <Shield size={20} />
               </div>
-              <p className="text-sm font-medium text-center">New Store Bonus</p>
-              <p className="text-xs text-gray-500 text-center mt-1">Get 2x points</p>
+              <p className="text-sm font-medium text-center">{item.title}</p>
+              <p className="text-xs text-gray-500 text-center mt-1">{item.desc}</p>
             </div>
           ))}
         </div>
