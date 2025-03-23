@@ -1,14 +1,14 @@
+/* eslint-disable react/no-unescaped-entities */
 "use client"
 
-import { Shield, Zap, Share2, Lock } from "lucide-react"
+import { Shield, Zap, Wallet, Share2, Lock } from "lucide-react"
 import { useEffect, useState } from "react"
 import Image from "next/image"
 import QRCode from "./components/Qrcode"
 import { useAuth } from "./context/AuthContext"
 import AuthForm from "./components/AuthForm"
-import { TokenContract } from "@aztec/noir-contracts.js/Token"
-import { AztecAddress, createPXEClient } from "@aztec/aztec.js"
-import { getDeployedTestAccountsWallets } from "@aztec/accounts/testing"
+import { TokenContract } from "@aztec/noir-contracts.js/Token";
+import { AztecAddress } from "@aztec/aztec.js"
 
 // Placeholder images
 const COFFEE_SHOP_IMG = "/placeholder.svg?height=32&width=32"
@@ -20,12 +20,12 @@ export default function Home() {
   const [showPayment, setShowPayment] = useState(false)
   const [loading, setLoading] = useState(true)
   const [showZkInfo, setShowZkInfo] = useState(false)
-  // const [userBalance, setUserBalance] = useState(0)
+  const [userBalance, setUserBalance] = useState(0)
 
-  const PXE_URL = process.env.PXE_URL || "http://35.228.247.23:8080"
-  const pxe = createPXEClient(PXE_URL)
+    // const PXE_URL = process.env.PXE_URL || 'http://35.228.247.23:8080';
+    // const pxe = createPXEClient(PXE_URL);
 
-  const { isAuthenticated, username, clientCache } = useAuth()
+  const { isAuthenticated, username, aztecWallet} = useAuth()
 
   // Check if already connected on mount
   useEffect(() => {
@@ -38,34 +38,25 @@ export default function Home() {
 
   useEffect(() => {
     console.log("EFFECT")
-    if (clientCache) {
+    if (aztecWallet) {
       readContract()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clientCache])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aztecWallet])
 
-  const readContract = async () => {
-    if (clientCache) {
-      try {
-        const wallet = (await getDeployedTestAccountsWallets(pxe))[0]
-
-        console.log(clientCache.aztecWallet, "AZTEC WALLET")
-        console.log("READ CONTRACT EXECUTE")
-        const TokenContractUsdc = await TokenContract.at(
-          AztecAddress.fromString("0x05c0e2a52deed36664b854fa86f6cd9b733d7b4c157bfaf1ce893d108b10ed63"),
-          wallet,
-        )
-
-        const balance = await TokenContractUsdc.methods
-          .balance_of_private(clientCache.aztecWallet.getAddress())
-          .simulate()
-
-        console.log(balance, "BALANCE CHECK")
-      } catch (err) {
-        console.log(err, "ERROR ")
+    const readContract = async () => {
+      if (aztecWallet) {
+          try{            
+          const TokenContractUsdc = await TokenContract.at(AztecAddress.fromString("0x2d55c209e94816dfe3bbfd6e0f5515738ddc96520dcb1ae1c8a34d6a22a950f4"), aztecWallet)  
+  
+          const balance = await TokenContractUsdc.methods.balance_of_private(aztecWallet.getAddress()).simulate()
+          
+          setUserBalance(balance)
+          } catch(err){
+            console.log(err, "ERROR ")
+          }
       }
     }
-  }
 
   // QR code value
   const qrValue = showPayment && paymentAmount ? `${walletAddress}?amount=${paymentAmount}` : walletAddress
@@ -80,8 +71,8 @@ export default function Home() {
     return (
       <div className="page-container page-purple flex flex-col items-center justify-center p-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2">ImpayQ</h1>
-          <p className="text-gray-600 mb-4">Your Gateway to Impeccable Payments</p>
+          <h1 className="text-3xl font-bold mb-2">ImPayQ</h1>
+          <p className="text-gray-600 mb-4">Blockchain-powered loyalty rewards</p>
         </div>
 
         <div className="w-full max-w-md mx-auto mb-8">
@@ -94,8 +85,8 @@ export default function Home() {
               <div className="icon-bg-blue p-3 rounded-full mx-auto mb-3 w-12 h-12 flex items-center justify-center">
                 <Shield size={24} />
               </div>
-              <h3 className="font-medium mb-1">Private</h3>
-              <p className="text-xs text-gray-500">Zero-knowledge security</p>
+              <h3 className="font-medium mb-1">Secure</h3>
+              <p className="text-xs text-gray-500">Blockchain-powered security</p>
             </div>
           </div>
 
@@ -104,8 +95,8 @@ export default function Home() {
               <div className="icon-bg-green p-3 rounded-full mx-auto mb-3 w-12 h-12 flex items-center justify-center">
                 <Zap size={24} />
               </div>
-              <h3 className="font-medium mb-1">Seamless</h3>
-              <p className="text-xs text-gray-500">Web2 simplicity</p>
+              <h3 className="font-medium mb-1">Rewards</h3>
+              <p className="text-xs text-gray-500">Earn at every purchase</p>
             </div>
           </div>
 
@@ -114,8 +105,8 @@ export default function Home() {
               <div className="icon-bg-purple p-3 rounded-full mx-auto mb-3 w-12 h-12 flex items-center justify-center">
                 <Lock size={24} />
               </div>
-              <h3 className="font-medium mb-1">Secure</h3>
-              <p className="text-xs text-gray-500">Aztec Network</p>
+              <h3 className="font-medium mb-1">ZK Email</h3>
+              <p className="text-xs text-gray-500">Zero-knowledge security</p>
             </div>
           </div>
         </div>
@@ -123,35 +114,35 @@ export default function Home() {
         {showZkInfo && (
           <div className="card w-full max-w-md mx-auto mt-4">
             <div className="card-content">
-              <h3 className="font-medium text-purple-700 mb-2">Privacy-First Technology</h3>
+              <h3 className="font-medium text-purple-700 mb-2">What is ZK Email?</h3>
               <p className="text-sm text-gray-600 mb-3">
-                ImpayQ uses zero-knowledge proofs to keep your financial data completely private while maintaining
-                security.
+                ZK Email is a powerful system that verifies emails using zero-knowledge proofs, based on the DKIM
+                protocol.
               </p>
               <div className="space-y-3">
                 <div className="flex items-start">
                   <div className="icon-bg-purple p-1 rounded-full mr-2 mt-0.5">
                     <Shield size={12} className="text-white" />
                   </div>
-                  <p className="text-sm text-gray-600">100% Zero-Knowledge Security for all transactions</p>
+                  <p className="text-sm text-gray-600">Your email is verified without revealing its contents</p>
                 </div>
                 <div className="flex items-start">
                   <div className="icon-bg-purple p-1 rounded-full mr-2 mt-0.5">
                     <Shield size={12} className="text-white" />
                   </div>
-                  <p className="text-sm text-gray-600">End-to-End Encryption for complete privacy</p>
+                  <p className="text-sm text-gray-600">Authentication happens through cryptographic proofs</p>
                 </div>
                 <div className="flex items-start">
                   <div className="icon-bg-purple p-1 rounded-full mr-2 mt-0.5">
                     <Shield size={12} className="text-white" />
                   </div>
-                  <p className="text-sm text-gray-600">No On-Chain Footprint of your transaction details</p>
+                  <p className="text-sm text-gray-600">Your privacy is protected through zero-knowledge technology</p>
                 </div>
                 <div className="flex items-start">
                   <div className="icon-bg-purple p-1 rounded-full mr-2 mt-0.5">
                     <Shield size={12} className="text-white" />
                   </div>
-                  <p className="text-sm text-gray-600">Familiar Web2 Interface with Web3 security</p>
+                  <p className="text-sm text-gray-600">No passwords needed - just access to your email</p>
                 </div>
               </div>
             </div>
@@ -167,10 +158,10 @@ export default function Home() {
       <div className="page-header">
         <div>
           <h2 className="page-subtitle">Hello, {username || "User"}!</h2>
-          <h1 className="page-title">Private Payments</h1>
+          <h1 className="page-title">Let's get rewarded!</h1>
         </div>
         <div className="icon-bg-purple p-2 rounded-full">
-          <Shield size={24} />
+          <Wallet size={24} />
         </div>
       </div>
 
@@ -179,12 +170,12 @@ export default function Home() {
           <div className="qr-gradient"></div>
           <div className="qr-content">
             <div className="qr-header">
-              <div className="qr-label">Your Private QR</div>
+              <div className="qr-label">Your QR Code</div>
               {showPayment && <div className="qr-amount">${paymentAmount}</div>}
             </div>
             <QRCode value={qrValue} size={220} />
             <div className="qr-footer">
-              <div className="qr-hint">Zero-knowledge protected</div>
+              <div className="qr-hint">Scan to pay or earn rewards</div>
             </div>
           </div>
         </div>
@@ -193,9 +184,9 @@ export default function Home() {
       <div className="balance-display">
         <div className="balance-amount">
           <span className="balance-currency">$</span>
-          <span className="balance-value">275.50</span>
+          <span className="balance-value">{userBalance}</span>
         </div>
-        <div className="balance-label">Private Balance</div>
+        <div className="balance-label">Available Balance</div>
       </div>
 
       <div className="input-group mb-4">
@@ -210,17 +201,17 @@ export default function Home() {
           onClick={() => setShowPayment(!showPayment)}
           className={`btn ${showPayment ? "btn-secondary" : "btn-outline"}`}
         >
-          {showPayment ? "Update" : "Create Payment"}
+          {showPayment ? "Update" : "Add Payment"}
         </button>
       </div>
 
       <button className="btn btn-primary btn-full">
         <Share2 size={16} className="mr-2" />
-        Private Transfer
+        Send to Friends
       </button>
 
       <div className="activity-container">
-        <h3 className="font-medium mb-3 text-gray-700">Private Transactions</h3>
+        <h3 className="font-medium mb-3 text-gray-700">Recent Activity</h3>
         <div className="space-y-3">
           <div className="activity-item">
             <div className="activity-icon">
@@ -235,7 +226,7 @@ export default function Home() {
             <div className="activity-content">
               <div className="activity-header">
                 <p className="activity-merchant">Coffee Shop</p>
-                <p className="activity-points">+25 tokens</p>
+                <p className="activity-points">+25 points</p>
               </div>
               <p className="activity-time">Today, 9:30 AM</p>
             </div>
@@ -253,7 +244,7 @@ export default function Home() {
             <div className="activity-content">
               <div className="activity-header">
                 <p className="activity-merchant">Grocery Store</p>
-                <p className="activity-points">+50 tokens</p>
+                <p className="activity-points">+50 points</p>
               </div>
               <p className="activity-time">Yesterday, 2:15 PM</p>
             </div>
@@ -263,4 +254,3 @@ export default function Home() {
     </div>
   )
 }
-

@@ -44,22 +44,9 @@ export enum PageState {
 const AuthContext = createContext<StateContextType | undefined>(undefined)
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+
   const PXE_URL = process.env.PXE_URL || 'http://35.228.247.23:8080';
   const pxe = createPXEClient(PXE_URL);
-
-  // Initialize state from localStorage if available
-  const [clientCache, setClientCache] = useState<ClientCache | null>(null)
-
-  useEffect(() => {
-    // Only run in browser environment
-    if (typeof window !== "undefined") {
-      const cachedStoragestr = localStorage.getItem("clientCache")
-      const cached = cachedStoragestr ? (JSON.parse(cachedStoragestr) as ClientCache) : null
-      console.log(cached, "CLIENT CACHE")
-      setClientCache(cached)
-    }
-  }, [])
-
   const [userEmailAddr, setUserEmailAddr] = useState<string>("")
   const [username, setUsername] = useState<string>("")
 
@@ -67,6 +54,39 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
   const [accountType, setAccountType] = useState<"test0" | "test1" | null>(null)
   const [aztecWallet, setAztecWallet ] = useState<AccountWalletWithSecretKey | null>(null)
+
+
+
+  // const publicClient = createPublicClient({
+  //   chain: baseSepolia,
+  //   transport: http("https://sepolia.base.org"),
+  // })
+
+  // Initialize state from localStorage if available
+  const [clientCache, setClientCache] = useState<ClientCache | null>(null)
+
+  useEffect(() => {
+    // Only run in browser environment
+    const initialization = async () => {
+      if (typeof window !== "undefined") {
+        const cachedStoragestr = localStorage.getItem("clientCache")
+        const accountType = localStorage.getItem("accountType")
+        
+        if(cachedStoragestr){
+          const wallet = (await getDeployedTestAccountsWallets(pxe))[accountType === "test0" ? 0 : 1];
+          const cached = cachedStoragestr ? (JSON.parse(cachedStoragestr) as ClientCache) : null
+          console.log(accountType)
+          console.log(cached, "CLIENT CACHE")
+          console.log(wallet, "WALLET AZTEC SET")
+          setClientCache(cached)
+          setAztecWallet(wallet)
+        }
+      }
+    }
+
+    initialization()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   //Phase 2
   // const [oauthClient, setOauthClient] = useState<OauthClient<typeof baseSepolia>>(
@@ -122,9 +142,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const wallet = (await getDeployedTestAccountsWallets(pxe))[tab === "userTab" ? 0 : 1];
 
 
-      localStorage.setItem("clientCache", JSON.stringify({userEmailAddr, username, accountType: tab === "userTab" ? "test0" : "test1", aztecWallet: wallet}))
+      localStorage.setItem("clientCache", JSON.stringify({userEmailAddr, username}))
       localStorage.setItem("walletConnected", "true")
       localStorage.setItem("walletAddress", wallet.getAddress().toString())
+      localStorage.setItem("accountType", tab === "userTab" ? "test0" : "test1")
 
       setAccountType(tab === "userTab" ? "test0" : "test1")
       setAztecWallet(wallet)
@@ -158,6 +179,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const logout = () => {
     localStorage.removeItem("walletConnected")
     localStorage.removeItem("walletAddress")
+    localStorage.removeItem("clientCache")
+    localStorage.removeItem("accountType")
 
     setAccountType(null)
     setAztecWallet(null)
@@ -201,4 +224,3 @@ export const useAuth = () => {
   }
   return context
 }
-
