@@ -1,90 +1,68 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { CreditCard, Gift, Plus, QrCode, Settings, ArrowRight, Shield, Lock } from "lucide-react"
+import {
+  CreditCard,
+  Gift,
+  Plus,
+  QrCode,
+  Settings,
+  ArrowRight,
+  Shield,
+  Lock,
+} from "lucide-react"
+import { useRouter } from "next/navigation"
+
+// Modals & Components
 import QRScanner from "../components/QRScanner"
 import PaymentConfirmation from "../components/PaymentConfirmation"
 import PaymentSuccess from "../components/PaymentSuccess"
-import { useAuth } from "../context/AuthContext"
-import { useRouter } from "next/navigation"
 
-// Add authentication check at the top of the component
+// Auth Context (includes merchant’s Aztec wallet)
+import { useAuth } from "../context/AuthContext"
+
+// AZTEC Imports
+import { TokenContract } from "@aztec/noir-contracts.js/Token"
+import { AztecAddress } from "@aztec/aztec.js"
+import { mintTokensToPrivate } from "../context/useTransferToken"
+
 export default function MerchantPage() {
-  const { accountType, isAuthenticated } = useAuth()
+  // -- Auth & Routing --
+  const { accountType, isAuthenticated, aztecWallet } = useAuth()
   const router = useRouter()
 
-  // Scanner state
+  // -- UI State --
+  const [activeTab, setActiveTab] = useState("rewards")
   const [showScanner, setShowScanner] = useState(false)
   const [scannedData, setScannedData] = useState<string | null>(null)
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
 
-  // Payment details
+  // -- Payment Details --
   const [paymentAmount, setPaymentAmount] = useState("")
   const [customerName, setCustomerName] = useState("")
   const [customerAddress, setCustomerAddress] = useState("")
   const [tokenName, setTokenName] = useState("")
   const [storeCredit, setStoreCredit] = useState(false)
   const [exchangeRate, setExchangeRate] = useState("1")
-  const [activeTab, setActiveTab] = useState("rewards")
 
-  // Redirect if not authenticated or not a merchant
+  // -- Redirect if not authenticated or not a merchant --
   useEffect(() => {
     if (!isAuthenticated) {
       router.push("/")
     } else if (accountType !== "test1") {
-      router.push("/") // Redirect non-merchants
+      router.push("/") // e.g. only "test1" is a merchant type
     }
   }, [isAuthenticated, accountType, router])
 
-  // If not authenticated or not a merchant, don't render the page content
   if (!isAuthenticated || accountType !== "test1") {
+    // Don’t render the page if the user shouldn’t be here
     return null
   }
 
-  // Rest of the component remains the same
-
-  // Handle scanned QR data
-  const handleScan = (data: string) => {
-    // We've received the raw QR data (e.g. "0xABC123...?amount=10")
-    console.log("Scanned data:", data)
-    setScannedData(data)
-    setShowConfirmation(true)
-
-    try {
-      // Example expected format: "0xYOURADDRESS?amount=XX.XX"
-      const [addressPart, queryString] = data.split("?")
-
-      // The part before '?' is the wallet address
-      setCustomerAddress(addressPart || "")
-
-      // Reset any old values
-      setPaymentAmount("")
-      setCustomerName("")
-
-      // If there's a query string (e.g., "amount=10"), parse it
-      if (queryString) {
-        const params = new URLSearchParams(queryString)
-        const scannedAmount = params.get("amount") || ""
-        // If your QR code also has `username`, you can parse that similarly:
-        // const scannedUsername = params.get("username") || ""
-
-        setPaymentAmount(scannedAmount)
-        // setCustomerName(scannedUsername)
-      }
-    } catch (error) {
-      // If something unexpected happens, we'll see the error here
-      console.error("Error parsing QR data:", error)
-    }
-  }
-
-  // Called when user confirms payment in PaymentConfirmation modal
-  const handleConfirmPayment = () => {
-    setShowConfirmation(false)
-    setShowSuccess(true)
-  }
-
-  // Open/Close scanner
+  // -----------------------------------------------------
+  //  QR SCANNER HANDLERS
+  // -----------------------------------------------------
   const openScanner = () => {
     if (typeof document !== "undefined") {
       document.body.style.overflow = "hidden"
@@ -99,22 +77,80 @@ export default function MerchantPage() {
     setShowScanner(false)
   }
 
-  // Close confirmation modal
+  // Called when the user scans a QR. We parse out the address & amount from the string.
+  const handleScan = (data: string) => {
+    console.log("Scanned data:", data)
+    setScannedData(data)
+    setShowConfirmation(true)
+
+    try {
+      // Example format: "0xAztecAddressHere?amount=10"
+      const [addressPart, queryString] = data.split("?")
+      setCustomerAddress(addressPart || "")
+      setPaymentAmount("")
+      setCustomerName("")
+
+      if (queryString) {
+        const params = new URLSearchParams(queryString)
+        const scannedAmount = params.get("amount") || ""
+        setPaymentAmount(scannedAmount)
+      }
+    } catch (error) {
+      console.error("Error parsing QR data:", error)
+    }
+  }
+
+  // -----------------------------------------------------
+  //  PAYMENT CONFIRMATION & AZTEC TRANSFER
+  // -----------------------------------------------------
+  const handleConfirmPayment = async () => {
+    try {
+      if (!aztecWallet) {
+        throw new Error("No merchant Aztec wallet found.")
+      }
+
+      // Convert the strings to the correct types
+      const userAztecAddress = AztecAddress.fromString(customerAddress)
+      const amountBigInt = BigInt(paymentAmount)
+
+      // Create a contract instance bound to the merchant’s wallet
+      
+      const TokenContractUsdc = await TokenContract.at(
+        AztecAddress.fromString("0x2d55c209e94816dfe3bbfd6e0f5515738ddc96520dcb1ae1c8a34d6a22a950f4"),
+        aztecWallet,
+      )
+
+      // Now call our helper to mint tokens
+      await mintTokensToPrivate(
+        TokenContractUsdc,
+        aztecWallet,      // The merchant's wallet
+        userAztecAddress, // The customer
+        amountBigInt      // The amount to mint
+      )
+
+      alert("Tokens successfully minted!")
+    } catch (error) {
+      console.error("Error minting tokens:", error)
+      alert("Payment failed; see console for details.")
+    }
+  }
+
+
+  // Close confirmation modal (no transfer)
   const handleCloseConfirmation = () => {
     setShowConfirmation(false)
     setScannedData(null)
   }
 
-  // Close success modal and log the transaction
+  // Close success modal, reset states, log transaction
   const handleCloseSuccess = () => {
     setShowSuccess(false)
     setScannedData(null)
     setActiveTab("scanner")
 
-    // Example: "log" a transaction
+    // Example “logging” of transaction
     const newTransaction = {
       id: Date.now().toString(),
-      // If "customerName" is "Alice Doe", we might shorten it to "Alice"
       name: customerName.split(" ")[0] || "Customer",
       address: customerAddress,
       amount: paymentAmount,
@@ -125,7 +161,6 @@ export default function MerchantPage() {
         hour12: true,
       }),
     }
-
     console.log("New transaction:", newTransaction)
 
     // Reset payment data
@@ -134,6 +169,9 @@ export default function MerchantPage() {
     setCustomerAddress("")
   }
 
+  // -----------------------------------------------------
+  //  RENDER UI
+  // -----------------------------------------------------
   return (
     <div className="page-container page-green">
       {/* Page Header */}
@@ -195,7 +233,9 @@ export default function MerchantPage() {
                     <label htmlFor="store-credit" className="input-label">
                       Enable as Store Credit
                     </label>
-                    <p className="text-xs text-gray-500">Allow customers to use as private payment</p>
+                    <p className="text-xs text-gray-500">
+                      Allow customers to use as private payment
+                    </p>
                   </div>
                   <label className="switch">
                     <input
@@ -286,15 +326,21 @@ export default function MerchantPage() {
               <div className="icon-bg-green p-4 rounded-xl mb-4">
                 <QrCode size={48} />
               </div>
-              <h3 className="text-lg font-medium text-gray-800 mb-2">Scan Customer Private QR</h3>
-              <p className="text-sm text-gray-500 text-center mb-4">Process zero-knowledge payments securely</p>
+              <h3 className="text-lg font-medium text-gray-800 mb-2">
+                Scan Customer Private QR
+              </h3>
+              <p className="text-sm text-gray-500 text-center mb-4">
+                Process zero-knowledge payments securely
+              </p>
               <button onClick={openScanner} className="btn btn-secondary btn-full py-6">
                 Open Scanner
               </button>
             </div>
           </div>
 
-          <h3 className="text-lg font-medium mb-4 text-gray-800">Recent Private Transactions</h3>
+          <h3 className="text-lg font-medium mb-4 text-gray-800">
+            Recent Private Transactions
+          </h3>
           <div className="space-y-3">
             <div className="card">
               <div className="card-content p-3">
@@ -380,7 +426,10 @@ export default function MerchantPage() {
                       <p className="font-medium text-gray-800">42</p>
                     </div>
                     <div className="progress-container">
-                      <div className="progress-bar progress-purple" style={{ width: "70%" }}></div>
+                      <div
+                        className="progress-bar progress-purple"
+                        style={{ width: "70%" }}
+                      ></div>
                     </div>
                   </div>
                 </div>
@@ -395,7 +444,10 @@ export default function MerchantPage() {
                       <p className="font-medium text-gray-800">28</p>
                     </div>
                     <div className="progress-container">
-                      <div className="progress-bar progress-blue" style={{ width: "45%" }}></div>
+                      <div
+                        className="progress-bar progress-blue"
+                        style={{ width: "45%" }}
+                      ></div>
                     </div>
                   </div>
                 </div>
@@ -410,12 +462,21 @@ export default function MerchantPage() {
 
       {/* Payment Confirmation Modal */}
       {showConfirmation && scannedData && (
-        <PaymentConfirmation qrData={scannedData} onConfirm={handleConfirmPayment} onCancel={handleCloseConfirmation} />
+        <PaymentConfirmation
+          qrData={scannedData}
+          onConfirm={handleConfirmPayment}
+          onCancel={handleCloseConfirmation}
+        />
       )}
 
       {/* Payment Success Modal */}
-      {showSuccess && <PaymentSuccess amount={paymentAmount} username={customerName} onClose={handleCloseSuccess} />}
+      {showSuccess && (
+        <PaymentSuccess
+          amount={paymentAmount}
+          username={customerName}
+          onClose={handleCloseSuccess}
+        />
+      )}
     </div>
   )
 }
-
