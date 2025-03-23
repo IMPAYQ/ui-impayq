@@ -21,7 +21,7 @@ export default function Home() {
   const [showPayment, setShowPayment] = useState(false)
   const [loading, setLoading] = useState(true)
   const [showZkInfo, setShowZkInfo] = useState(false)
-  const [userBalance, setUserBalance] = useState(0)
+  // const [userBalance, setUserBalance] = useState(0)
 
     const PXE_URL = process.env.PXE_URL || 'http://35.228.247.23:8080';
     const pxe = createPXEClient(PXE_URL);
@@ -42,6 +42,7 @@ export default function Home() {
     if (clientCache) {
       readContract()
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clientCache])
 
     const readContract = async () => {
@@ -54,7 +55,7 @@ export default function Home() {
           const TokenContractUsdc = await TokenContract.at(AztecAddress.fromString("0x05c0e2a52deed36664b854fa86f6cd9b733d7b4c157bfaf1ce893d108b10ed63"), wallet)
   
   
-          let balance = await TokenContractUsdc.methods.balance_of_private(clientCache.aztecWallet.getAddress()).simulate()
+          const balance = await TokenContractUsdc.methods.balance_of_private(clientCache.aztecWallet.getAddress()).simulate()
           
           console.log(balance, "BALANCE CHECK")
           } catch(err){

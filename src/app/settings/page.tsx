@@ -5,7 +5,6 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { useAuth } from "../context/AuthContext"
-import { type Address, } from "viem"
 import { TokenContract } from "@aztec/noir-contracts.js/Token";
 import { AztecAddress } from "@aztec/aztec.js"
 
@@ -17,8 +16,6 @@ export default function SettingsPage() {
   const router = useRouter()
   const [walletAddress, setWalletAddress] = useState<string | null>(null)
   const { logout, username, userEmailAddr, clientCache } = useAuth()
-  const [userBalance, setUserBalance] = useState(0);
-
   // Get wallet address from localStorage on component mount
   useEffect(() => {
     console.log("EFFECT")
@@ -27,6 +24,7 @@ export default function SettingsPage() {
       setWalletAddress(clientCache?.walletAddress)
       readContract()
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Format wallet address for display
@@ -46,7 +44,7 @@ export default function SettingsPage() {
         const TokenContractUsdc = await TokenContract.at(AztecAddress.fromString("0x05c0e2a52deed36664b854fa86f6cd9b733d7b4c157bfaf1ce893d108b10ed63"), clientCache.aztecWallet)
 
 
-        let balance = await TokenContractUsdc.methods.balance_of_private(clientCache.aztecWallet.getAddress())
+        const balance = await TokenContractUsdc.methods.balance_of_private(clientCache.aztecWallet.getAddress())
         
         console.log(balance, "BALANCE CHECK")
     }

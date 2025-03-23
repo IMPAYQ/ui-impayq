@@ -2,9 +2,6 @@
 
 import type React from "react"
 import { createContext, useContext, useState, type ReactNode, useEffect } from "react"
-import { OauthClient } from "@zk-email/oauth-sdk"
-import { type Address, createPublicClient, http } from "viem"
-import { baseSepolia } from "viem/chains"
 import { getDeployedTestAccountsWallets } from '@aztec/accounts/testing';
 import { AccountWalletWithSecretKey, createPXEClient } from "@aztec/aztec.js"
 
@@ -47,17 +44,8 @@ export enum PageState {
 const AuthContext = createContext<StateContextType | undefined>(undefined)
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const coreAddress = process.env.NEXT_PUBLIC_CORE_ADDRESS || ""
-  const oauthAddress = process.env.NEXT_PUBLIC_OAUTH_ADDRESS || ""
-  const relayerHost = process.env.NEXT_PUBLIC_RELAYER_HOST || ""
   const PXE_URL = process.env.PXE_URL || 'http://35.228.247.23:8080';
   const pxe = createPXEClient(PXE_URL);
-
-
-  const publicClient = createPublicClient({
-    chain: baseSepolia,
-    transport: http("https://sepolia.base.org"),
-  })
 
   // Initialize state from localStorage if available
   const [clientCache, setClientCache] = useState<ClientCache | null>(null)
@@ -124,7 +112,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setIsAuthenticated(true)
 
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clientCache])
 
 
