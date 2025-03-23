@@ -74,9 +74,9 @@ export default function PaymentSuccess({ amount, username, onClose }: PaymentSuc
             <CheckCircle size={48} className="text-green-500" />
           </div>
 
-          <h2 className="text-2xl font-bold mb-2">Payment Successful!</h2>
+          <h2 className="text-2xl font-bold mb-2">Private Payment Successful!</h2>
           <p className="text-gray-500 text-center mb-8">
-            You've received ${amount} from {username}
+            You've received ${amount} from {username} securely
           </p>
 
           <div className="card w-full mb-6">
@@ -87,7 +87,7 @@ export default function PaymentSuccess({ amount, username, onClose }: PaymentSuc
                   <p className="text-2xl font-bold">${amount}</p>
                 </div>
                 <div className="badge badge-green px-3 py-1">
-                  <span className="font-medium">+{Math.floor(Number.parseFloat(amount))} points</span>
+                  <span className="font-medium">+{Math.floor(Number.parseFloat(amount))} tokens</span>
                 </div>
               </div>
             </div>
@@ -95,7 +95,7 @@ export default function PaymentSuccess({ amount, username, onClose }: PaymentSuc
 
           <div className="bg-purple-50 rounded-xl p-4 w-full">
             <p className="text-sm text-center text-purple-700">
-              Transaction has been recorded on the blockchain and rewards have been issued.
+              Transaction has been recorded privately on the Aztec Network with zero-knowledge security.
             </p>
           </div>
         </div>

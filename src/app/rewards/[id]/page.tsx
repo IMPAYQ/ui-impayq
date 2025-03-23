@@ -1,4 +1,4 @@
-import { ArrowLeft, Coffee, Gift, Star } from "lucide-react"
+import { ArrowLeft, Coffee, Gift, Star, Shield } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 
@@ -55,11 +55,11 @@ export default function MerchantRewardsPage() {
           <div className="flex justify-between items-center">
             <div className="flex items-center">
               <div className={`icon-container ${merchantData.color}`}>
-                <merchantData.icon size={24} />
+                <Shield size={24} />
               </div>
               <div>
-                <h2 className="text-lg font-medium text-gray-800">Your Balance</h2>
-                <p className="text-sm text-gray-500">Available to redeem</p>
+                <h2 className="text-lg font-medium text-gray-800">Your Token Balance</h2>
+                <p className="text-sm text-gray-500">Private and secure</p>
               </div>
             </div>
             <div className={`badge ${merchantData.bgColor} px-4 py-2`}>
@@ -70,7 +70,7 @@ export default function MerchantRewardsPage() {
       </div>
 
       <div className="mb-4">
-        <h3 className="text-lg font-medium mb-3 text-gray-800">Redeem Rewards</h3>
+        <h3 className="text-lg font-medium mb-3 text-gray-800">Redeem Tokens</h3>
         <div className="space-y-4">
           {merchantData.rewards.map((reward) => (
             <div key={reward.id} className="card">
@@ -105,7 +105,7 @@ export default function MerchantRewardsPage() {
                   disabled={merchantData.points < reward.points}
                 >
                   <Gift size={16} className="mr-2" />
-                  Redeem Reward
+                  Redeem Privately
                 </button>
               </div>
             </div>
@@ -114,7 +114,7 @@ export default function MerchantRewardsPage() {
       </div>
 
       <div className="mt-8">
-        <button className="btn btn-primary btn-full">Convert to Store Credit</button>
+        <button className="btn btn-primary btn-full">Convert to Private Credit</button>
       </div>
     </div>
   )

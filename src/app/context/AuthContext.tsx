@@ -85,6 +85,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     initialization()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   //Phase 2
@@ -223,4 +224,3 @@ export const useAuth = () => {
   }
   return context
 }
-

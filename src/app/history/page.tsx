@@ -1,4 +1,4 @@
-import { ArrowDownLeft, ArrowUpRight, Coffee, ShoppingBag, Utensils } from "lucide-react"
+import { ArrowDownLeft, ArrowUpRight, Coffee, ShoppingBag, Utensils, Lock } from "lucide-react"
 
 // Mock data for transaction history
 const transactions = [
@@ -51,7 +51,7 @@ const transactions = [
 export default function HistoryPage() {
   return (
     <div className="page-container page-green">
-      <h1 className="page-title mb-6">Transaction History</h1>
+      <h1 className="page-title mb-6">Private Transactions</h1>
 
       <div className="space-y-4">
         {transactions.map((transaction) => (
@@ -59,7 +59,7 @@ export default function HistoryPage() {
             <div className="card-content">
               <div className="flex items-center">
                 <div className={`icon-container ${transaction.color}`}>
-                  <transaction.icon size={20} />
+                  <Lock size={20} />
                 </div>
                 <div className="flex-1">
                   <div className="flex justify-between">
@@ -75,15 +75,15 @@ export default function HistoryPage() {
                           <ArrowUpRight size={12} className="mr-1" />
                         )}
                         {transaction.points > 0 ? "+" : ""}
-                        {transaction.points} points
+                        {transaction.points} tokens
                       </div>
                     </div>
                   </div>
                   <div className="flex justify-between mt-1">
                     <p className="text-sm text-gray-500">
-                      {transaction.type === "earned" && "Rewards earned"}
-                      {transaction.type === "payment" && "Payment"}
-                      {transaction.type === "redeemed" && "Rewards redeemed"}
+                      {transaction.type === "earned" && "Tokens earned"}
+                      {transaction.type === "payment" && "Private payment"}
+                      {transaction.type === "redeemed" && "Tokens redeemed"}
                     </p>
                     <p className="text-sm text-gray-500">{transaction.date}</p>
                   </div>
@@ -92,21 +92,22 @@ export default function HistoryPage() {
             </div>
           </div>
         ))}
-      </div>
 
-      <div className="activity-container mt-8">
-        <h3 className="font-medium mb-3 text-gray-700">Monthly Summary</h3>
-        <div className="stats-grid">
-          <div className="stat-card purple-bg">
-            <p className="stat-label">Points Earned</p>
-            <p className="stat-value purple-text">1,250</p>
-          </div>
-          <div className="stat-card green-bg">
-            <p className="stat-label">Points Redeemed</p>
-            <p className="stat-value green-text">450</p>
+        <div className="activity-container mt-8">
+          <h3 className="font-medium mb-3 text-gray-700">Privacy Summary</h3>
+          <div className="stats-grid">
+            <div className="stat-card purple-bg">
+              <p className="stat-label">Tokens Earned</p>
+              <p className="stat-value purple-text">1,250</p>
+            </div>
+            <div className="stat-card green-bg">
+              <p className="stat-label">Tokens Redeemed</p>
+              <p className="stat-value green-text">450</p>
+            </div>
           </div>
         </div>
       </div>
     </div>
   )
 }
+

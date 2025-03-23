@@ -182,7 +182,11 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
             <div className="relative w-64 h-64 mb-8">
               <div
                 className={`absolute inset-0 border-2 ${
-                  scanningStage === "confirmed" ? "border-green-500" : scanningStage === "detecting" ? "border-yellow-500" : "border-white"
+                  scanningStage === "confirmed"
+                    ? "border-green-500"
+                    : scanningStage === "detecting"
+                      ? "border-yellow-500"
+                      : "border-white"
                 } rounded-lg`}
               ></div>
 
@@ -197,8 +201,8 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
                   scanningStage === "confirmed"
                     ? "border-green-500"
                     : scanningStage === "detecting"
-                    ? "border-yellow-500"
-                    : "border-purple-500"
+                      ? "border-yellow-500"
+                      : "border-purple-500"
                 }`}
               ></div>
               <div
@@ -206,8 +210,8 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
                   scanningStage === "confirmed"
                     ? "border-green-500"
                     : scanningStage === "detecting"
-                    ? "border-yellow-500"
-                    : "border-purple-500"
+                      ? "border-yellow-500"
+                      : "border-purple-500"
                 }`}
               ></div>
               <div
@@ -215,8 +219,8 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
                   scanningStage === "confirmed"
                     ? "border-green-500"
                     : scanningStage === "detecting"
-                    ? "border-yellow-500"
-                    : "border-purple-500"
+                      ? "border-yellow-500"
+                      : "border-purple-500"
                 }`}
               ></div>
               <div
@@ -224,8 +228,8 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
                   scanningStage === "confirmed"
                     ? "border-green-500"
                     : scanningStage === "detecting"
-                    ? "border-yellow-500"
-                    : "border-purple-500"
+                      ? "border-yellow-500"
+                      : "border-purple-500"
                 }`}
               ></div>
 
@@ -234,7 +238,7 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm flex items-center">
                     <Loader2 size={16} className="animate-spin mr-2" />
-                    Detecting QR code...
+                    Detecting private QR code...
                   </div>
                 </div>
               )}
@@ -244,15 +248,15 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="bg-green-500 text-white px-3 py-1 rounded-full text-sm flex items-center">
                     <Check size={16} className="mr-2" />
-                    QR code detected!
+                    Private QR detected!
                   </div>
                 </div>
               )}
             </div>
 
             <p className="text-white text-center px-6">
-              {scanningStage === "searching" && "Position the QR code within the frame to scan"}
-              {scanningStage === "detecting" && "Hold still, reading QR code..."}
+              {scanningStage === "searching" && "Position the private QR code within the frame"}
+              {scanningStage === "detecting" && "Hold still, reading private QR code..."}
               {scanningStage === "confirmed" && "Successfully scanned! Processing..."}
             </p>
           </div>
@@ -263,7 +267,7 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
               <button onClick={onClose} className="btn btn-icon bg-black bg-opacity-50 text-white mr-2">
                 <ArrowLeft size={24} />
               </button>
-              <h3 className="text-white text-lg font-medium ml-4">Scan Customer QR</h3>
+              <h3 className="text-white text-lg font-medium ml-4">Scan Private QR</h3>
             </div>
           </div>
         </div>
@@ -271,3 +275,4 @@ export default function QRScanner({ onScan, onClose }: QRScannerProps) {
     </div>
   )
 }
+

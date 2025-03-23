@@ -563,7 +563,7 @@ button {
 }
 
 .tab-trigger.active {
-  background-color: var(--color-green-500);
+  background-color: #10b981;
   color: var(--color-white);
 }
 
@@ -1340,7 +1340,6 @@ input:checked + .switch-slider:before {
   animation: spin 1s linear infinite;
 }
 
-
 /* Balance Display */
 .balance-display {
   display: flex;
@@ -1372,3 +1371,4 @@ input:checked + .switch-slider:before {
   color: var(--color-gray-500);
   margin-top: var(--space-1);
 }
+

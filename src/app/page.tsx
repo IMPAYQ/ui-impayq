@@ -28,7 +28,7 @@ export default function Home() {
     // const pxe = createPXEClient(PXE_URL);
 
   const { isAuthenticated, username , clientCache, aztecWallet} = useAuth()
-  const { mintTokensToPrivate} = useTransferToken()
+  // const { mintTokensToPrivate} = useTransferToken()
 
   // Check if already connected on mount
   useEffect(() => {
@@ -44,6 +44,7 @@ export default function Home() {
     if (aztecWallet) {
       readContract()
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aztecWallet])
 
     const readContract = async () => {
@@ -51,7 +52,7 @@ export default function Home() {
           try{            
           const TokenContractUsdc = await TokenContract.at(AztecAddress.fromString("0x2d55c209e94816dfe3bbfd6e0f5515738ddc96520dcb1ae1c8a34d6a22a950f4"), aztecWallet)  
   
-          let balance = await TokenContractUsdc.methods.balance_of_private(aztecWallet.getAddress()).simulate()
+          const balance = await TokenContractUsdc.methods.balance_of_private(aztecWallet.getAddress()).simulate()
           
           setUserBalance(balance)
 
@@ -258,4 +259,3 @@ export default function Home() {
     </div>
   )
 }
-
