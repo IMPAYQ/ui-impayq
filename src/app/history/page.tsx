@@ -1,4 +1,9 @@
+"use client"
+
 import { ArrowDownLeft, ArrowUpRight, Coffee, ShoppingBag, Utensils, Lock } from "lucide-react"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "../context/AuthContext"
 
 // Mock data for transaction history
 const transactions = [
@@ -49,6 +54,21 @@ const transactions = [
 ]
 
 export default function HistoryPage() {
+  const { isAuthenticated } = useAuth()
+  const router = useRouter()
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/")
+    }
+  }, [isAuthenticated, router])
+
+  // If not authenticated, don't render the page content
+  if (!isAuthenticated) {
+    return null
+  }
+
   return (
     <div className="page-container page-green">
       <h1 className="page-title mb-6">Private Transactions</h1>

@@ -7,7 +7,7 @@ import Image from "next/image"
 import QRCode from "./components/Qrcode"
 import { useAuth } from "./context/AuthContext"
 import AuthForm from "./components/AuthForm"
-import { TokenContract } from "@aztec/noir-contracts.js/Token";
+import { TokenContract } from "@aztec/noir-contracts.js/Token"
 import { AztecAddress } from "@aztec/aztec.js"
 
 // Placeholder images
@@ -22,10 +22,10 @@ export default function Home() {
   const [showZkInfo, setShowZkInfo] = useState(false)
   const [userBalance, setUserBalance] = useState(0)
 
-    // const PXE_URL = process.env.PXE_URL || 'http://35.228.247.23:8080';
-    // const pxe = createPXEClient(PXE_URL);
+  // const PXE_URL = process.env.PXE_URL || 'http://35.228.247.23:8080';
+  // const pxe = createPXEClient(PXE_URL);
 
-  const { isAuthenticated, username, aztecWallet} = useAuth()
+  const { isAuthenticated, username, aztecWallet } = useAuth()
 
   // Check if already connected on mount
   useEffect(() => {
@@ -38,25 +38,28 @@ export default function Home() {
 
   useEffect(() => {
     console.log("EFFECT")
-    if (aztecWallet) {
+    if (aztecWallet && !userBalance) {
       readContract()
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [aztecWallet])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aztecWallet, userBalance])
 
-    const readContract = async () => {
-      if (aztecWallet) {
-          try{            
-          const TokenContractUsdc = await TokenContract.at(AztecAddress.fromString("0x2d55c209e94816dfe3bbfd6e0f5515738ddc96520dcb1ae1c8a34d6a22a950f4"), aztecWallet)  
-  
-          const balance = await TokenContractUsdc.methods.balance_of_private(aztecWallet.getAddress()).simulate()
-          
-          setUserBalance(balance)
-          } catch(err){
-            console.log(err, "ERROR ")
-          }
+  const readContract = async () => {
+    if (aztecWallet) {
+      try {
+        const TokenContractUsdc = await TokenContract.at(
+          AztecAddress.fromString("0x2d55c209e94816dfe3bbfd6e0f5515738ddc96520dcb1ae1c8a34d6a22a950f4"),
+          aztecWallet,
+        )
+
+        const balance = await TokenContractUsdc.methods.balance_of_private(aztecWallet.getAddress()).simulate()
+
+        setUserBalance(balance)
+      } catch (err) {
+        console.log(err, "ERROR ")
       }
     }
+  }
 
   // QR code value
   const qrValue = showPayment && paymentAmount ? `${walletAddress}?amount=${paymentAmount}` : walletAddress
@@ -254,3 +257,4 @@ export default function Home() {
     </div>
   )
 }
+

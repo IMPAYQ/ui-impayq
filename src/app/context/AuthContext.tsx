@@ -2,9 +2,8 @@
 
 import type React from "react"
 import { createContext, useContext, useState, type ReactNode, useEffect } from "react"
-import { getDeployedTestAccountsWallets } from '@aztec/accounts/testing';
-import { AccountWalletWithSecretKey, createPXEClient } from "@aztec/aztec.js"
-
+import { getDeployedTestAccountsWallets } from "@aztec/accounts/testing"
+import { type AccountWalletWithSecretKey, createPXEClient } from "@aztec/aztec.js"
 
 export type StateContextType = {
   userEmailAddr: string
@@ -44,18 +43,15 @@ export enum PageState {
 const AuthContext = createContext<StateContextType | undefined>(undefined)
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-
-  const PXE_URL = process.env.PXE_URL || 'http://35.228.247.23:8080';
-  const pxe = createPXEClient(PXE_URL);
+  const PXE_URL = process.env.PXE_URL || "http://35.228.247.23:8080"
+  const pxe = createPXEClient(PXE_URL)
   const [userEmailAddr, setUserEmailAddr] = useState<string>("")
   const [username, setUsername] = useState<string>("")
 
   const [pageState, setPageState] = useState<PageState>(PageState.landing)
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
   const [accountType, setAccountType] = useState<"test0" | "test1" | null>(null)
-  const [aztecWallet, setAztecWallet ] = useState<AccountWalletWithSecretKey | null>(null)
-
-
+  const [aztecWallet, setAztecWallet] = useState<AccountWalletWithSecretKey | null>(null)
 
   // const publicClient = createPublicClient({
   //   chain: baseSepolia,
@@ -71,15 +67,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (typeof window !== "undefined") {
         const cachedStoragestr = localStorage.getItem("clientCache")
         const accountType = localStorage.getItem("accountType")
-        
-        if(cachedStoragestr){
-          const wallet = (await getDeployedTestAccountsWallets(pxe))[accountType === "test0" ? 0 : 1];
-          const cached = cachedStoragestr ? (JSON.parse(cachedStoragestr) as ClientCache) : null
-          console.log(accountType)
-          console.log(cached, "CLIENT CACHE")
-          console.log(wallet, "WALLET AZTEC SET")
-          setClientCache(cached)
-          setAztecWallet(wallet)
+
+        if (cachedStoragestr && accountType) {
+          try {
+            const wallet = (await getDeployedTestAccountsWallets(pxe))[accountType === "test0" ? 0 : 1]
+            const cached = JSON.parse(cachedStoragestr) as ClientCache
+
+            console.log(accountType)
+            console.log(cached, "CLIENT CACHE")
+            console.log(wallet, "WALLET AZTEC SET")
+
+            setClientCache(cached)
+            setAztecWallet(wallet)
+            setAccountType(accountType === "test0" ? "test0" : "test1")
+          } catch (error) {
+            console.error("Error initializing wallet:", error)
+          }
         }
       }
     }
@@ -119,30 +122,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // // eslint-disable-next-line react-hooks/exhaustive-deps
   // }, [cachedOauthClient])
 
-
-
-    // PHASE 2 Initialize from cache when it's loaded
+  // PHASE 2 Initialize from cache when it's loaded
   useEffect(() => {
     if (clientCache) {
       setUserEmailAddr(clientCache.userEmailAddr)
       setUsername(clientCache.username)
-      setAztecWallet(clientCache.aztecWallet)
-      setAccountType(clientCache.accountType)
       setPageState(PageState.send)
       setIsAuthenticated(true)
-
     }
   }, [clientCache])
 
-
   const Activation = async (tab: string | null) => {
     try {
-
       console.log("ACTIVATION")
-      const wallet = (await getDeployedTestAccountsWallets(pxe))[tab === "userTab" ? 0 : 1];
+      const wallet = (await getDeployedTestAccountsWallets(pxe))[tab === "userTab" ? 0 : 1]
 
-
-      localStorage.setItem("clientCache", JSON.stringify({userEmailAddr, username}))
+      localStorage.setItem("clientCache", JSON.stringify({ userEmailAddr, username }))
       localStorage.setItem("walletConnected", "true")
       localStorage.setItem("walletAddress", wallet.getAddress().toString())
       localStorage.setItem("accountType", tab === "userTab" ? "test0" : "test1")
@@ -170,11 +165,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   //   console.log(wallet.getAddress().toString(), "WALLET AZTEC")
   // }
 
-
   // useEffect(( ) => {
   //   aztecTest()
   // }, [])
-  
 
   const logout = () => {
     localStorage.removeItem("walletConnected")
@@ -209,7 +202,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         accountType,
         setAccountType,
         Activation,
-        clientCache
+        clientCache,
       }}
     >
       {children}
@@ -224,3 +217,4 @@ export const useAuth = () => {
   }
   return context
 }
+

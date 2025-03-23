@@ -1,16 +1,17 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { CreditCard, Gift, Plus, QrCode, Settings, ArrowRight, Shield, Lock } from "lucide-react"
 import QRScanner from "../components/QRScanner"
 import PaymentConfirmation from "../components/PaymentConfirmation"
 import PaymentSuccess from "../components/PaymentSuccess"
+import { useAuth } from "../context/AuthContext"
+import { useRouter } from "next/navigation"
 
+// Add authentication check at the top of the component
 export default function MerchantPage() {
-  const [tokenName, setTokenName] = useState("")
-  const [storeCredit, setStoreCredit] = useState(false)
-  const [exchangeRate, setExchangeRate] = useState("1")
-  const [activeTab, setActiveTab] = useState("rewards")
+  const { accountType, isAuthenticated } = useAuth()
+  const router = useRouter()
 
   // Scanner state
   const [showScanner, setShowScanner] = useState(false)
@@ -22,6 +23,26 @@ export default function MerchantPage() {
   const [paymentAmount, setPaymentAmount] = useState("")
   const [customerName, setCustomerName] = useState("")
   const [customerAddress, setCustomerAddress] = useState("")
+  const [tokenName, setTokenName] = useState("")
+  const [storeCredit, setStoreCredit] = useState(false)
+  const [exchangeRate, setExchangeRate] = useState("1")
+  const [activeTab, setActiveTab] = useState("rewards")
+
+  // Redirect if not authenticated or not a merchant
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/")
+    } else if (accountType !== "test1") {
+      router.push("/") // Redirect non-merchants
+    }
+  }, [isAuthenticated, accountType, router])
+
+  // If not authenticated or not a merchant, don't render the page content
+  if (!isAuthenticated || accountType !== "test1") {
+    return null
+  }
+
+  // Rest of the component remains the same
 
   // Handle scanned QR data
   const handleScan = (data: string) => {

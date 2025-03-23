@@ -1,6 +1,11 @@
+"use client"
+
 import { ArrowLeft, Coffee, Gift, Star, Shield } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "../../context/AuthContext"
 
 // Mock data for a specific merchant's rewards
 const merchantData = {
@@ -36,8 +41,22 @@ const merchantData = {
 }
 
 export default function MerchantRewardsPage() {
-  // In a real app, we would fetch the merchant data based on the ID
-  // For this demo, we'll just use the mock data
+  const { isAuthenticated, accountType } = useAuth()
+  const router = useRouter()
+
+  // Redirect if not authenticated or not a user
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/")
+    } else if (accountType !== "test0") {
+      router.push("/") // Redirect merchants away from user rewards
+    }
+  }, [isAuthenticated, accountType, router])
+
+  // If not authenticated or not a user, don't render the page content
+  if (!isAuthenticated || accountType !== "test0") {
+    return null
+  }
 
   return (
     <div className="page-container page-blue">

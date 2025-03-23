@@ -4,6 +4,7 @@ import { ShoppingBag, Coffee, Utensils, Ticket, ChevronRight, Shield } from "luc
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
+import { useAuth } from "../context/AuthContext"
 
 // Mock data for rewards
 const rewards = [
@@ -44,20 +45,25 @@ const rewards = [
 export default function RewardsPage() {
   const router = useRouter()
   const [isConnected, setIsConnected] = useState(false)
+  const { isAuthenticated, accountType } = useAuth()
 
-  // Check wallet connection status
+  // Check wallet connection status and account type
   useEffect(() => {
-    const connected = localStorage.getItem("walletConnected") === "true"
+    const connected = localStorage.getItem("walletConnected") === "true" || isAuthenticated
     setIsConnected(connected)
 
     // Redirect to home if not connected
     if (!connected) {
       router.push("/")
     }
-  }, [router])
+    // Redirect merchants to merchant page
+    else if (accountType === "test1") {
+      router.push("/merchant")
+    }
+  }, [router, isAuthenticated, accountType])
 
-  // Don't render content if not connected
-  if (!isConnected) {
+  // Don't render content if not connected or not a user
+  if (!isConnected || accountType !== "test0") {
     return null
   }
 

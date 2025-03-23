@@ -24,14 +24,19 @@ export default function ClientLayout({
   const pathname = usePathname()
   const router = useRouter()
   const { isAuthenticated } = useAuth()
+  const [accountType, setAccountType] = useState<string | null>(null)
 
-  // Check wallet connection status
+  // Update the useEffect to prevent re-rendering issues and add account type check
   useEffect(() => {
     // Check if running in browser environment
     if (typeof window !== "undefined") {
       const checkConnection = () => {
         const connected = localStorage.getItem("walletConnected") === "true" || isAuthenticated
-        setIsConnected(connected)
+
+        // Only update state if it's different to prevent re-renders
+        if (connected !== isConnected) {
+          setIsConnected(connected)
+        }
 
         // Redirect to home if not connected and trying to access protected routes
         // Skip the home page since it handles both states
@@ -46,18 +51,25 @@ export default function ClientLayout({
       // Set up event listener for storage changes (in case another tab changes connection state)
       window.addEventListener("storage", checkConnection)
 
+      // Fetch account type from local storage
+      const storedAccountType = localStorage.getItem("accountType")
+      if (storedAccountType) {
+        setAccountType(storedAccountType)
+      }
+
       return () => {
         window.removeEventListener("storage", checkConnection)
       }
     }
-  }, [pathname, router, isAuthenticated])
+  }, [pathname, router, isAuthenticated, isConnected])
 
+  // Update the navItems to include role-based visibility
   const navItems = [
-    { icon: Home, label: "Home", href: "/" },
-    { icon: CreditCard, label: "Tokens", href: "/rewards" },
-    { icon: Store, label: "Business", href: "/merchant" },
-    { icon: History, label: "History", href: "/history" },
-    { icon: Settings, label: "Privacy", href: "/settings" },
+    { icon: Home, label: "Home", href: "/", roles: ["user", "merchant"] },
+    { icon: CreditCard, label: "Tokens", href: "/rewards", roles: ["user"] },
+    { icon: Store, label: "Business", href: "/merchant", roles: ["merchant"] },
+    { icon: History, label: "History", href: "/history", roles: ["user", "merchant"] },
+    { icon: Settings, label: "Privacy", href: "/settings", roles: ["user", "merchant"] },
   ]
 
   return (
@@ -68,19 +80,27 @@ export default function ClientLayout({
           {isConnected && (
             <nav className="nav-container">
               <div className="nav-items">
-                {navItems.map((item) => {
-                  const isActive = pathname === item.href
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={`nav-item ${isActive ? "nav-item-active" : "nav-item-inactive"}`}
-                    >
-                      <item.icon className="nav-item-icon" size={20} />
-                      <span>{item.label}</span>
-                    </Link>
-                  )
-                })}
+                {navItems
+                  .filter((item) => {
+                    // If accountType is "test0", show user items
+                    // If accountType is "test1", show merchant items
+                    if (accountType === "test0") return item.roles.includes("user")
+                    if (accountType === "test1") return item.roles.includes("merchant")
+                    return true // Show all if no account type (fallback)
+                  })
+                  .map((item) => {
+                    const isActive = pathname === item.href
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={`nav-item ${isActive ? "nav-item-active" : "nav-item-inactive"}`}
+                      >
+                        <item.icon className="nav-item-icon" size={20} />
+                        <span>{item.label}</span>
+                      </Link>
+                    )
+                  })}
               </div>
             </nav>
           )}

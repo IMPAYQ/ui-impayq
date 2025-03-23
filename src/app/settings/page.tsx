@@ -3,7 +3,7 @@
 import { Bell, ChevronRight, Copy, HelpCircle, Lock, LogOut, Shield } from "lucide-react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useAuth } from "../context/AuthContext"
 import { TokenContract } from "@aztec/noir-contracts.js/Token"
 import { AztecAddress } from "@aztec/aztec.js"
@@ -11,21 +11,50 @@ import { AztecAddress } from "@aztec/aztec.js"
 // Placeholder image
 const USER_AVATAR = "/placeholder.svg?height=64&width=64"
 
+// Add authentication check at the top of the component
 export default function SettingsPage() {
   const router = useRouter()
   const [walletAddress, setWalletAddress] = useState<string | null>(null)
-  const { logout, username, userEmailAddr, clientCache } = useAuth()
+  const { logout, username, userEmailAddr, clientCache, isAuthenticated } = useAuth()
 
-  // Get wallet address from localStorage on component mount
-  useEffect(() => {
-    console.log("EFFECT")
+  // Define readContract with useCallback to avoid dependency issues
+  const readContract = useCallback(async () => {
     if (clientCache) {
-      console.log("MASUK EFFECT")
-      setWalletAddress(clientCache?.walletAddress)
+      console.log("READ CONTRACT EXECUTE")
+      try {
+        const TokenContractUsdc = await TokenContract.at(
+          AztecAddress.fromString("0x05c0e2a52deed36664b854fa86f6cd9b733d7b4c157bfaf1ce893d108b10ed63"),
+          clientCache.aztecWallet,
+        )
+
+        const balance = await TokenContractUsdc.methods.balance_of_private(clientCache.aztecWallet.getAddress())
+
+        console.log(balance, "BALANCE CHECK")
+      } catch (error) {
+        console.error("Error reading contract:", error)
+      }
+    }
+  }, [clientCache])
+
+  // Redirect if not authenticated - this must be called unconditionally
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/")
+    }
+  }, [isAuthenticated, router])
+
+  // Set wallet address from client cache - this must be called unconditionally
+  useEffect(() => {
+    if (clientCache && clientCache.walletAddress) {
+      setWalletAddress(clientCache.walletAddress)
       readContract()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [clientCache, readContract])
+
+  // If not authenticated, don't render the page content
+  if (!isAuthenticated) {
+    return null
+  }
 
   // Format wallet address for display
   const formattedAddress = walletAddress
@@ -36,20 +65,6 @@ export default function SettingsPage() {
   const handleLogout = async () => {
     logout()
     router.push("/")
-  }
-
-  const readContract = async () => {
-    if (clientCache) {
-      console.log("READ CONTRACT EXECUTE")
-      const TokenContractUsdc = await TokenContract.at(
-        AztecAddress.fromString("0x05c0e2a52deed36664b854fa86f6cd9b733d7b4c157bfaf1ce893d108b10ed63"),
-        clientCache.aztecWallet,
-      )
-
-      const balance = await TokenContractUsdc.methods.balance_of_private(clientCache.aztecWallet.getAddress())
-
-      console.log(balance, "BALANCE CHECK")
-    }
   }
 
   return (
