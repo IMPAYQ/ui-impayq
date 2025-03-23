@@ -5,20 +5,27 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { useAuth } from "../context/AuthContext"
+import { type Address, } from "viem"
+import { TokenContract } from "@aztec/noir-contracts.js/Token";
+import { AztecAddress } from "@aztec/aztec.js"
+
 
 // Placeholder image
 const USER_AVATAR = "/placeholder.svg?height=64&width=64"
 
 export default function SettingsPage() {
   const router = useRouter()
-  const [walletAddress, setWalletAddress] = useState<string>("")
-  const { logout, username, userEmailAddr } = useAuth()
+  const [walletAddress, setWalletAddress] = useState<string | null>(null)
+  const { logout, username, userEmailAddr, clientCache } = useAuth()
+  const [userBalance, setUserBalance] = useState(0);
 
   // Get wallet address from localStorage on component mount
   useEffect(() => {
-    const storedAddress = localStorage.getItem("walletAddress")
-    if (storedAddress) {
-      setWalletAddress(storedAddress)
+    console.log("EFFECT")
+    if (clientCache) {
+      console.log("MASUK EFFECT")
+      setWalletAddress(clientCache?.walletAddress)
+      readContract()
     }
   }, [])
 
@@ -31,6 +38,18 @@ export default function SettingsPage() {
   const handleLogout = async () => {
     logout()
     router.push("/")
+  }
+
+  const readContract = async () => {
+    if (clientCache) {
+        console.log("READ CONTRACT EXECUTE")
+        const TokenContractUsdc = await TokenContract.at(AztecAddress.fromString("0x05c0e2a52deed36664b854fa86f6cd9b733d7b4c157bfaf1ce893d108b10ed63"), clientCache.aztecWallet)
+
+
+        let balance = await TokenContractUsdc.methods.balance_of_private(clientCache.aztecWallet.getAddress())
+        
+        console.log(balance, "BALANCE CHECK")
+    }
   }
 
   return (
@@ -68,7 +87,7 @@ export default function SettingsPage() {
                   <button
                     className="btn btn-outline btn-icon rounded-full"
                     onClick={() => {
-                      if (navigator.clipboard) {
+                      if (navigator.clipboard && walletAddress) {
                         navigator.clipboard.writeText(walletAddress)
                       }
                     }}

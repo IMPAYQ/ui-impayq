@@ -6,7 +6,7 @@ import { OauthClient } from "@zk-email/oauth-sdk"
 import { type Address, createPublicClient, http } from "viem"
 import { baseSepolia } from "viem/chains"
 import { getDeployedTestAccountsWallets } from '@aztec/accounts/testing';
-import { createPXEClient } from "@aztec/aztec.js"
+import { AccountWalletWithSecretKey, createPXEClient } from "@aztec/aztec.js"
 
 
 export type StateContextType = {
@@ -14,22 +14,28 @@ export type StateContextType = {
   setUserEmailAddr: (userEmailAddr: string) => void
   username: string
   setUsername: (username: string) => void
-  oauthClient: OauthClient<typeof baseSepolia>
-  setOauthClient: (oauthClient: OauthClient<typeof baseSepolia>) => void
-  requestId: number | null
-  setRequestId: (requestId: number | null) => void
   pageState: PageState
   setPageState: (pageState: PageState) => void
   isAuthenticated: boolean
   logout: () => void
+  accountType: "test0" | "test1" | null
+  aztecWallet?: AccountWalletWithSecretKey | null
+  setAccountType: (type: "test0" | "test1" | null) => void
+  Activation: (tab: string | null) => void
+  clientCache: ClientCache | null
+  // phase 2
+  // oauthClient?: OauthClient<typeof baseSepolia>
+  // setOauthClient?: (oauthClient: OauthClient<typeof baseSepolia>) => void
+  // requestId?: number | null
+  // setRequestId?: (requestId: number | null) => void
 }
 
-export type OauthClientCache = {
+export type ClientCache = {
   userEmailAddr: string
   username: string
-  userWalletAddr: Address
-  ephePrivateKey: `0x${string}`
-  epheAddrNonce: string
+  walletAddress: string
+  accountType: "test0" | "test1"
+  aztecWallet: AccountWalletWithSecretKey
 }
 
 export enum PageState {
@@ -54,109 +60,128 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   })
 
   // Initialize state from localStorage if available
-  const [cachedOauthClient, setCachedOauthClient] = useState<OauthClientCache | null>(null)
+  const [clientCache, setClientCache] = useState<ClientCache | null>(null)
 
   useEffect(() => {
     // Only run in browser environment
     if (typeof window !== "undefined") {
-      const cachedOauthClientStr = localStorage.getItem("oauthClient")
-      const cached = cachedOauthClientStr ? (JSON.parse(cachedOauthClientStr) as OauthClientCache) : null
-      setCachedOauthClient(cached)
+      const cachedStoragestr = localStorage.getItem("clientCache")
+      const cached = cachedStoragestr ? (JSON.parse(cachedStoragestr) as ClientCache) : null
+      console.log(cached, "CLIENT CACHE")
+      setClientCache(cached)
     }
   }, [])
 
   const [userEmailAddr, setUserEmailAddr] = useState<string>("")
   const [username, setUsername] = useState<string>("")
-  const [oauthClient, setOauthClient] = useState<OauthClient<typeof baseSepolia>>(
-    new OauthClient(publicClient, coreAddress as Address, oauthAddress as Address, relayerHost),
-  )
-  const [requestId, setRequestId] = useState<number | null>(null)
+
   const [pageState, setPageState] = useState<PageState>(PageState.landing)
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
-  const [aztecAccount, setAztecAzzount] = useState<string | null>(null)
+  const [accountType, setAccountType] = useState<"test0" | "test1" | null>(null)
+  const [aztecWallet, setAztecWallet ] = useState<AccountWalletWithSecretKey | null>(null)
 
-  // Initialize from cache when it's loaded
+  //Phase 2
+  // const [oauthClient, setOauthClient] = useState<OauthClient<typeof baseSepolia>>(
+  //   new OauthClient(publicClient, coreAddress as Address, oauthAddress as Address, relayerHost),
+  // )
+  // const [requestId, setRequestId] = useState<number | null>(null)
+
+  // PHASE 2 Initialize from cache when it's loaded
+  // useEffect(() => {
+  //   if (cachedOauthClient) {
+  //     setUserEmailAddr(cachedOauthClient.userEmailAddr)
+  //     setUsername(cachedOauthClient.username)
+  //     setPageState(PageState.send)
+  //     setIsAuthenticated(true)
+
+  //     // Initialize OAuth client with cached values
+  //     const initializedClient = new OauthClient(
+  //       publicClient,
+  //       coreAddress as Address,
+  //       oauthAddress as Address,
+  //       relayerHost,
+  //       cachedOauthClient.userEmailAddr,
+  //       cachedOauthClient.userWalletAddr,
+  //       cachedOauthClient.ephePrivateKey,
+  //       cachedOauthClient.epheAddrNonce,
+  //     )
+
+  //     setOauthClient(initializedClient)
+  //   }
+  // // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [cachedOauthClient])
+
+
+
+    // PHASE 2 Initialize from cache when it's loaded
   useEffect(() => {
-    if (cachedOauthClient) {
-      setUserEmailAddr(cachedOauthClient.userEmailAddr)
-      setUsername(cachedOauthClient.username)
+    if (clientCache) {
+      setUserEmailAddr(clientCache.userEmailAddr)
+      setUsername(clientCache.username)
+      setAztecWallet(clientCache.aztecWallet)
+      setAccountType(clientCache.accountType)
       setPageState(PageState.send)
       setIsAuthenticated(true)
 
-      // Initialize OAuth client with cached values
-      const initializedClient = new OauthClient(
-        publicClient,
-        coreAddress as Address,
-        oauthAddress as Address,
-        relayerHost,
-        cachedOauthClient.userEmailAddr,
-        cachedOauthClient.userWalletAddr,
-        cachedOauthClient.ephePrivateKey,
-        cachedOauthClient.epheAddrNonce,
-      )
-
-      setOauthClient(initializedClient)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cachedOauthClient])
+  }, [clientCache])
 
-  // Monitor request ID for activation
-  useEffect(() => {
-    const waitForActivation = async () => {
-      if (requestId !== null) {
-        try {
-          await oauthClient?.waitEpheAddrActivated(requestId)
 
-          // Save to cache
-          const newCache: OauthClientCache = {
-            userEmailAddr,
-            username,
-            userWalletAddr: oauthClient.getWalletAddress() as Address,
-            ephePrivateKey: oauthClient.getEphePrivateKey(),
-            epheAddrNonce: oauthClient.getEpheAddrNonce() as string,
-          }
+  const Activation = async (tab: string | null) => {
+    try {
 
-          localStorage.setItem("oauthClient", JSON.stringify(newCache))
-          localStorage.setItem("walletConnected", "true")
-          localStorage.setItem("walletAddress", oauthClient.getWalletAddress() as string)
+      console.log("ACTIVATION")
+      const wallet = (await getDeployedTestAccountsWallets(pxe))[tab === "userTab" ? 0 : 1];
 
-          setRequestId(null)
-          setPageState(PageState.send)
-          setIsAuthenticated(true)
 
-          // Force a reload to ensure all components pick up the new connection state
-          window.location.reload()
-        } catch (error) {
-          console.error("Error waiting for activation:", error)
-        }
-      }
+      localStorage.setItem("clientCache", JSON.stringify({userEmailAddr, username, accountType: tab === "userTab" ? "test0" : "test1", aztecWallet: wallet}))
+      localStorage.setItem("walletConnected", "true")
+      localStorage.setItem("walletAddress", wallet.getAddress().toString())
+
+      setAccountType(tab === "userTab" ? "test0" : "test1")
+      setAztecWallet(wallet)
+
+      setPageState(PageState.send)
+      setIsAuthenticated(true)
+
+      // phase 2
+      // setRequestId(null)
+
+      // Force a reload to ensure all components pick up the new connection state
+      window.location.reload()
+    } catch (error) {
+      console.log(error, "ERROR ACTIVATION")
+      console.error("Error waiting for activation:", error)
     }
-
-    waitForActivation()
-  }, [requestId, oauthClient, userEmailAddr, username])
-
-  async function aztecTest() {
-    const wallet = (await getDeployedTestAccountsWallets(pxe))[0];
-
-    console.log(wallet, "WALLET AZTEC")
   }
 
+  // async function aztecTest() {
+  //   const wallet = (await getDeployedTestAccountsWallets(pxe))[0];
 
-  useEffect(( ) => {
-    aztecTest()
-  }, [])
+  //   console.log(wallet.getAddress().toString(), "WALLET AZTEC")
+  // }
+
+
+  // useEffect(( ) => {
+  //   aztecTest()
+  // }, [])
   
 
   const logout = () => {
-    localStorage.removeItem("oauthClient")
     localStorage.removeItem("walletConnected")
     localStorage.removeItem("walletAddress")
 
+    setAccountType(null)
+    setAztecWallet(null)
     setUserEmailAddr("")
     setUsername("")
     setPageState(PageState.landing)
     setIsAuthenticated(false)
-    setOauthClient(new OauthClient(publicClient, coreAddress as Address, oauthAddress as Address, relayerHost))
+
+    // phase 2
+    // setOauthClient(new OauthClient(publicClient, coreAddress as Address, oauthAddress as Address, relayerHost))
+    // localStorage.removeItem("oauthClient")
   }
 
   return (
@@ -166,14 +191,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setUserEmailAddr,
         username,
         setUsername,
-        oauthClient,
-        setOauthClient,
-        requestId,
-        setRequestId,
+        aztecWallet,
         pageState,
         setPageState,
         isAuthenticated,
         logout,
+        accountType,
+        setAccountType,
+        Activation,
+        clientCache
       }}
     >
       {children}

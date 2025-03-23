@@ -205,6 +205,14 @@
   dependencies:
     tslib "^2.4.0"
 
+"@aztec/noir-contracts.js@^0.82.0":
+  version "0.82.0"
+  resolved "https://registry.yarnpkg.com/@aztec/noir-contracts.js/-/noir-contracts.js-0.82.0.tgz#69918fcd869280bdf892b8c8c1ac72f1de1941b7"
+  integrity sha512-Y7ZGp/d0iAFj9WhrxqeAtDdwfXHLdGNNezuns1z6rgq1EFM44aC+2VJVlJZjRKxelOwitxg1QPfltS3GZMD/5Q==
+  dependencies:
+    "@aztec/aztec.js" "0.82.0"
+    tslib "^2.4.0"
+
 "@aztec/protocol-contracts@0.82.0":
   version "0.82.0"
   resolved "https://registry.yarnpkg.com/@aztec/protocol-contracts/-/protocol-contracts-0.82.0.tgz#d76f6c070a63e64ef2a708a6eb226602b6dd21a7"

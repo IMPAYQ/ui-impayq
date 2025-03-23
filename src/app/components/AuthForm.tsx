@@ -17,46 +17,38 @@ export default function AuthForm() {
     setUserEmailAddr,
     username,
     setUsername,
-    oauthClient,
-    setOauthClient,
-    setRequestId,
     pageState,
-    setPageState
+    setPageState,
+    setAccountType,
+    Activation
   } = useAuth()
 
   // Validate form
   useEffect(() => {
-    if (activeTab === "userTab") {
-      setIsFormValid(
-        userEmailAddr !== "" && 
-        emailRegex.test(userEmailAddr) && 
-        username !== "" && 
-        !emailRegex.test(username)
-      )
-    } else {
-      setIsFormValid(userEmailAddr !== "" && emailRegex.test(userEmailAddr))
+    if(activeTab === "userTab") {
+      setUserEmailAddr("test0@example.com")
+      setUsername("test0UserAccount")
+    }else{
+      setUserEmailAddr("test1@example.com")
+      setUsername("test1MerchantAccount")
     }
-  }, [userEmailAddr, username, activeTab])
+  }, [activeTab])
 
   const handleSubmit = async () => {
-    if (!isFormValid) return
+
+    console.log("HANDLE SUBTIT")
+
     
     setIsLoading(true)
     setPageState(PageState.waiting)
     
     try {
-      // Setup OAuth client
-      const newRequestId = await oauthClient?.setup(
-        userEmailAddr,
-        username,
-        null,
-        [[10, "TEST"]]
-      )
+      // Setup aztec account 
+      await Activation(activeTab)
       
-      setOauthClient(oauthClient)
-      setRequestId(newRequestId)
     } catch (error) {
-      console.error("Error setting up OAuth client:", error)
+      console.log(error, "ERROR SETTING UP AZTEC ACCOUNT")
+      console.error("Error setting up aztec account:", error)
       setPageState(PageState.landing)
     } finally {
       setIsLoading(false)

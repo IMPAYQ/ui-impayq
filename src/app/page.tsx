@@ -7,6 +7,9 @@ import Image from "next/image"
 import QRCode from "./components/Qrcode"
 import { useAuth } from "./context/AuthContext"
 import AuthForm from "./components/AuthForm"
+import { TokenContract } from "@aztec/noir-contracts.js/Token";
+import { AztecAddress, createPXEClient } from "@aztec/aztec.js"
+import { getDeployedTestAccountsWallets } from "@aztec/accounts/testing"
 
 // Placeholder images
 const COFFEE_SHOP_IMG = "/placeholder.svg?height=32&width=32"
@@ -18,8 +21,12 @@ export default function Home() {
   const [showPayment, setShowPayment] = useState(false)
   const [loading, setLoading] = useState(true)
   const [showZkInfo, setShowZkInfo] = useState(false)
+  const [userBalance, setUserBalance] = useState(0)
 
-  const { isAuthenticated, username } = useAuth()
+    const PXE_URL = process.env.PXE_URL || 'http://35.228.247.23:8080';
+    const pxe = createPXEClient(PXE_URL);
+
+  const { isAuthenticated, username , clientCache} = useAuth()
 
   // Check if already connected on mount
   useEffect(() => {
@@ -29,6 +36,32 @@ export default function Home() {
     setWalletAddress(address)
     setLoading(false)
   }, [])
+
+  useEffect(() => {
+    console.log("EFFECT")
+    if (clientCache) {
+      readContract()
+    }
+  }, [clientCache])
+
+    const readContract = async () => {
+      if (clientCache) {
+          try{
+          const wallet = (await getDeployedTestAccountsWallets(pxe))[0];
+            
+          console.log(clientCache.aztecWallet, "AZTEC WALLET")
+          console.log("READ CONTRACT EXECUTE")
+          const TokenContractUsdc = await TokenContract.at(AztecAddress.fromString("0x05c0e2a52deed36664b854fa86f6cd9b733d7b4c157bfaf1ce893d108b10ed63"), wallet)
+  
+  
+          let balance = await TokenContractUsdc.methods.balance_of_private(clientCache.aztecWallet.getAddress()).simulate()
+          
+          console.log(balance, "BALANCE CHECK")
+          } catch(err){
+            console.log(err, "ERROR ")
+          }
+      }
+    }
 
   // QR code value
   const qrValue = showPayment && paymentAmount ? `${walletAddress}?amount=${paymentAmount}` : walletAddress
@@ -151,6 +184,14 @@ export default function Home() {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="balance-display">
+        <div className="balance-amount">
+          <span className="balance-currency">$</span>
+          <span className="balance-value">275.50</span>
+        </div>
+        <div className="balance-label">Available Balance</div>
       </div>
 
       <div className="input-group mb-4">
